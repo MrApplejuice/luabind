@@ -19,6 +19,7 @@ SOURCES =
     test_exceptions.cpp
     test_extend_class_in_lua.cpp
     test_free_functions.cpp
+    test_function_signatures.cpp
     test_held_type.cpp
     test_implicit_cast.cpp
     test_implicit_raw.cpp
