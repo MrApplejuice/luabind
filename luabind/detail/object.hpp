@@ -154,11 +154,11 @@ namespace adl
     , boost::mpl::true_, boost::mpl::true_)
   {
        L = value_wrapper_traits<T>::interpreter(lhs);
-		 lua_State* L2 = value_wrapper_traits<U>::interpreter(rhs);
+       lua_State* L2 = value_wrapper_traits<U>::interpreter(rhs);
 
        // you are comparing objects with different interpreters
        // that's not allowed.
-		 assert(L == L2 || L == 0 || L2 == 0);
+       assert(L == L2 || L == 0 || L2 == 0);
 
        // if the two objects we compare have different interpreters
        // then they
@@ -167,7 +167,7 @@ namespace adl
        if (L == 0) return 1;
        return 0;
   }
-	
+    
   template<class T, class U>
   int binary_interpreter(lua_State*& L, T const& x, U const&
     , boost::mpl::true_, boost::mpl::false_)
@@ -232,11 +232,11 @@ LUABIND_BINARY_OP_DEF(<, LUA_OPLT)
       detail::stack_pop pop(interpreter, 1);
       value_wrapper_traits<ValueWrapper>::unwrap(interpreter
         , static_cast<ValueWrapper const&>(v));
-		char const* p = lua_tostring(interpreter, -1);
+        char const* p = lua_tostring(interpreter, -1);
         std::size_t len = lua_rawlen(interpreter, -1);
-		std::copy(p, p + len, std::ostream_iterator<char>(os));
-		return os;
-	}
+        std::copy(p, p + len, std::ostream_iterator<char>(os));
+        return os;
+    }
 
 #undef LUABIND_BINARY_OP_DEF
 
@@ -379,14 +379,14 @@ LUABIND_BINARY_OP_DEF(<, LUA_OPLT)
               lua_pop(m_interpreter, 2);
       }
 
-		// this will set the value to nil
-		iterator_proxy & operator=(luabind::detail::nil_type)
-		{
+        // this will set the value to nil
+        iterator_proxy & operator=(luabind::detail::nil_type)
+        {
           lua_pushvalue(m_interpreter, m_key_index);
-			 lua_pushnil(m_interpreter);
+             lua_pushnil(m_interpreter);
           AccessPolicy::set(m_interpreter, m_table_index);
           return *this;
-		}
+        }
 
       template<class T>
       iterator_proxy& operator=(T const& value)
@@ -616,18 +616,18 @@ namespace adl
       // This is non-const to prevent conversion on lvalues.
       operator object();
 
-		// this will set the value to nil
-		this_type& operator=(luabind::detail::nil_type)
-		{
-	       value_wrapper_traits<Next>::unwrap(m_interpreter, m_next);
+      // this will set the value to nil
+      this_type& operator=(luabind::detail::nil_type)
+      {
+          value_wrapper_traits<Next>::unwrap(m_interpreter, m_next);
           detail::stack_pop pop(m_interpreter, 1);
 
           lua_pushvalue(m_interpreter, m_key_index);
-			 lua_pushnil(m_interpreter);
+          lua_pushnil(m_interpreter);
           lua_settable(m_interpreter, -3);
           return *this;
-		}
-		
+      }
+        
       template<class T>
       this_type& operator=(T const& value)
       {
@@ -665,8 +665,8 @@ namespace adl
       }
 
   private:
-		struct hidden_type {};
-		
+      struct hidden_type {};
+        
 //      this_type& operator=(index_proxy<Next> const&);
 
       mutable lua_State* m_interpreter;
@@ -802,13 +802,13 @@ namespace adl
   class argument : public object_interface<argument>
   {
   public:
-	  argument(from_stack const& stack_reference)
-		: m_interpreter(stack_reference.interpreter)
-		, m_index(stack_reference.index)
-	  {
-		  if (m_index < 0)
-			  m_index = lua_gettop(m_interpreter) - m_index + 1;
-	  }
+      argument(from_stack const& stack_reference)
+        : m_interpreter(stack_reference.interpreter)
+        , m_index(stack_reference.index)
+      {
+          if (m_index < 0)
+              m_index = lua_gettop(m_interpreter) - m_index + 1;
+      }
 
       template<class T>
       index_proxy<argument> operator[](T const& key) const
@@ -816,19 +816,19 @@ namespace adl
           return index_proxy<argument>(*this, m_interpreter, key);
       }
 
-	  void push(lua_State* L) const
-	  {
-		  lua_pushvalue(L, m_index);
-	  }
+      void push(lua_State* L) const
+      {
+          lua_pushvalue(L, m_index);
+      }
 
-	  lua_State* interpreter() const
-	  {
-		  return m_interpreter;
-	  }
+      lua_State* interpreter() const
+      {
+          return m_interpreter;
+      }
 
   private:
-	  lua_State* m_interpreter;
-	  int m_index;
+      lua_State* m_interpreter;
+      int m_index;
   };
 
 } // namespace adl
