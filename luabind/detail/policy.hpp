@@ -718,9 +718,9 @@ struct number_converter
 // floating-point
 template <typename T>
 struct default_converter<T,
-    typename boost::enable_if<boost::is_floating_point<T> >::type
+    typename boost::enable_if< boost::is_floating_point< typename boost::remove_reference<T>::type > >::type
     >
-    : number_converter<T> {};
+    : number_converter< typename boost::remove_reference<T>::type > {};
 
 // *********** converter for bool *****************
 template <>

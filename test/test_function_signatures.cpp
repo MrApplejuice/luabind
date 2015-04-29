@@ -23,9 +23,20 @@
 #include "test.hpp"
 #include <luabind/luabind.hpp>
 
-void a(float x) {}
-void b(const float x) {}
-void c(const float& x) {}
+// I do not test "pure" references (int&) here, because they
+// are not supported in lua
+
+void ia(int x) {}
+void ib(const int x) {}
+void ic(const int& x) {}
+
+void fa(float x) {}
+void fb(const float x) {}
+void fc(const float& x) {}
+
+void sa(std::string x) {}
+void sb(const std::string x) {}
+void sc(const std::string& x) {}
 
 void test_main(lua_State* L)
 {
@@ -33,18 +44,35 @@ void test_main(lua_State* L)
 
     module(L)
     [
-        def("a", &a),
-        def("b", &b),
-        def("c", &c)
+        def("ia", &ia),
+        def("ib", &ib),
+        def("ic", &ic),
+
+        def("fa", &fa),
+        def("fb", &fb),
+        def("fc", &fc),
+
+        def("sa", &sa),
+        def("sb", &sb),
+        def("sc", &sc)
     ];
 
-    DOSTRING(L, "a(1)");
-    DOSTRING(L, "a(1.0)");
+    DOSTRING(L, "ia(1)");
+    DOSTRING(L, "ib(1)");
+    DOSTRING(L, "ic(1)");
 
-    DOSTRING(L, "b(1)");
-    DOSTRING(L, "b(1.0)");
 
-    DOSTRING(L, "c(1)");
-    DOSTRING(L, "c(1.0)");
+    DOSTRING(L, "fa(1)");
+    DOSTRING(L, "fa(1.0)");
+
+    DOSTRING(L, "fb(1)");
+    DOSTRING(L, "fb(1.0)");
+
+    DOSTRING(L, "fc(1)");
+    DOSTRING(L, "fc(1.0)");
+
+    DOSTRING(L, "sa('1')");
+    DOSTRING(L, "sb('1')");
+    DOSTRING(L, "sc('1')");
 }
 
