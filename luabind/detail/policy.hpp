@@ -686,9 +686,16 @@ struct integer_converter
 // integral
 template <typename T>
 struct default_converter<T,
-    typename boost::enable_if<boost::is_integral<T> >::type
+    // Matches a) integral types 
+    typename boost::enable_if< typename boost::mpl::or_< boost::is_integral<T>,
+    // OR b) integral type const references which are NOT enum types
+                                                         typename boost::mpl::and_< boost::is_integral<typename boost::remove_reference<T>::type>,
+                                                                                    boost::is_reference<T>, 
+                                                                                    typename boost::is_const< typename boost::remove_reference<T>::type >::type,
+                                                                                    typename boost::mpl::not_< boost::is_enum<T> >::type 
+                                                                                  >::type >::type >::type
     >
-    : integer_converter<T> {};
+    : integer_converter< typename boost::remove_reference <T>::type > {};
 
 // *********** converter for floating-point number types *****************
 template <typename QualifiedT>
