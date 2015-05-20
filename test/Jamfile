@@ -46,6 +46,7 @@ SOURCES =
     test_user_defined_converter.cpp
     test_vector_of_object.cpp
     test_virtual_inheritance.cpp
+    test_wrapper_type_unpacking.cpp
     test_yield.cpp
  ;
 

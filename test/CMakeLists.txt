@@ -50,6 +50,7 @@ set(TESTS
 	super_leak
 	table
 	tag_function
+	wrapper_type_unpacking
 	unsigned_int
 	user_defined_converter
 	vector_of_object
