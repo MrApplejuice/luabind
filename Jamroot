@@ -81,12 +81,12 @@ else if [ os.name ] in LINUX MACOSX FREEBSD
         prefix = $(prefix:D) ;
     }
 
-    local lib = $(prefix)/lib/i386-linux-gnu/ ;
+    local lib = $(prefix)/lib ;
 
     local names = liblua5.2 liblua52 liblua ;
     local extensions = .a .so ;
 
-    library = [ GLOB $(lib)/lua52 $(lib)/lua5.2 $(lib)/lua $(lib) :
+    library = [ GLOB $(lib)/lua52 $(lib)/lua5.2 $(lib)/lua $(lib) /usr/lib/x86_64-linux-gnu/ :
         $(names)$(extensions) ] ;
     lib-name = [ MATCH "lib(.*)" : $(library[1]:B) ] ;
 
