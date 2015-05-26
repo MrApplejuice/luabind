@@ -22,6 +22,8 @@
 
 #include "test.hpp"
 #include <luabind/luabind.hpp>
+#include <luabind/shared_ptr_converter.hpp>
+
 
 #include <boost/shared_ptr.hpp>
 
@@ -36,13 +38,18 @@ struct A
 
 struct B : public A
 {
+  typedef boost::shared_ptr<B> Ptr;
+
+  void BFunction() {}
   B(int x) : A(x) {}
 };
 
 struct User {
-  A::Ptr getSomeA() const { return A::Ptr(new A(0)); }
-  void setA(A::Ptr) {}
-  void setConstRefA(const A::Ptr&) {}
+  typedef A::Ptr Type;
+
+  Type getSomeA() const { return A::Ptr(new A(0)); }
+  void setA(Type t) { std::cout << __FUNCTION__ << " " << t->x << std::endl; }
+  void setConstRefA(const Type& t) { std::cout << __FUNCTION__ << " " << t->x << std::endl; }
 };
 
 int accessX(A::Ptr a) {
@@ -60,35 +67,60 @@ void test_main(lua_State* L)
     module(L)
     [
         class_<A, A::Ptr>("A")
-            .def(constructor<int>()),
-        class_<B, A, A::Ptr>("B")
-            .def(constructor<int>()),
+            .def(constructor<int>())
+    ];
+       
+    module(L)
+    [
+        class_<B, A, B::Ptr>("B")
+            .def(constructor<int>())
+            .def("BFunc", &B::BFunction),
         class_<User>("User")
-            .def(constructor<>())
             .def("setA", &User::setA)
             .def("setConstRefA", &User::setConstRefA)
-            .def("a_prop_constRef", &User::getSomeA, &User::setConstRefA)
-            .def("a_prop", &User::getSomeA, &User::setA),
+            .property("a_prop_constRef", &User::getSomeA, &User::setConstRefA)
+            .property("a_prop", &User::getSomeA, &User::setA),
         def("accessX", &accessX),
         def("accessXConstRef", &accessXConstRef)
     ];
+    
+    globals(L)["a_"] = object(L, A::Ptr(new A(11337)));
+    globals(L)["b_"] = object(L, B::Ptr(new B(21337)));
 
     DOSTRING(L, "a = A(1337)");
     DOSTRING(L, "assert(accessX(a) == 1337)");
     DOSTRING(L, "assert(accessXConstRef(a) == 1337)");
 
-    DOSTRING(L, "b = B(1500)");
-    DOSTRING(L, "assert(accessX(b) == 1500)");
-    DOSTRING(L, "assert(accessXConstRef(b) == 1500)");
+    DOSTRING(L, "b = B(2337)");
+    DOSTRING(L, "assert(accessX(b) == 2337)");
+    DOSTRING(L, "assert(accessXConstRef(b) == 2337)");
 
-    DOSTRING(L, "user = User()");
+    std::cout << "A id: " << luabind::detail::registered_class<A>::id << std::endl;
+    std::cout << "B id: " << luabind::detail::registered_class<B>::id << std::endl;
+
+    std::cout << "A::Ptr id: " << luabind::detail::registered_class<A::Ptr>::id << std::endl;
+    std::cout << "B::Ptr id: " << luabind::detail::registered_class<B::Ptr>::id << std::endl;
+
+
+    globals(L)["user"] = object(L, User());
     DOSTRING(L, "user:setA(a)");
     DOSTRING(L, "user:setA(b)");
+    DOSTRING(L, "user:setA(a_)");
+    DOSTRING(L, "user:setA(b_)");
     DOSTRING(L, "user:setConstRefA(a)");
     DOSTRING(L, "user:setConstRefA(b)");
+    DOSTRING(L, "user:setConstRefA(a_)");
+    DOSTRING(L, "user:setConstRefA(b_)");
     DOSTRING(L, "user.a_prop = a");
     DOSTRING(L, "user.a_prop = b");
+    DOSTRING(L, "user.a_prop = a_");
+    DOSTRING(L, "user.a_prop = b_");
     DOSTRING(L, "user.a_prop_constRef = a");
     DOSTRING(L, "user.a_prop_constRef = b");
+    DOSTRING(L, "user.a_prop_constRef = a_");
+    DOSTRING(L, "user.a_prop_constRef = b_");
+
+    DOSTRING(L, "b:BFunc()");
+    DOSTRING(L, "b_:BFunc()");
 }
 
