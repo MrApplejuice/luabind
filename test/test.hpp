@@ -117,21 +117,21 @@ int counted_type<T>::count = 0;
     }                                           \
 }
 
-#define DOSTRING(state_, str)                   \
-{                                               \
-    try                                         \
-    {                                           \
-        dostring(state_, str);                  \
-    }                                           \
-    catch (luabind::error const& e)             \
-    {                                           \
+#define DOSTRING(state_, str)                    \
+{                                                \
+    try                                          \
+    {                                            \
+        dostring(state_, str);                   \
+    }                                            \
+    catch (luabind::error const& e)              \
+    {                                            \
         TEST_ERROR(lua_tostring(e.state(), -1)); \
-            lua_pop(L, 1);                      \
-    }                                           \
-    catch (std::string const& s)                \
-    {                                           \
-        TEST_ERROR(s.c_str());                  \
-    }                                           \
+            lua_pop(state_, 1);                  \
+    }                                            \
+    catch (std::string const& s)                 \
+    {                                            \
+        TEST_ERROR(s.c_str());                   \
+    }                                            \
 }
 
 #endif // TEST_050415_HPP
