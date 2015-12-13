@@ -20,6 +20,7 @@ set(TESTS
 	construction
 	create_in_thread
 	def_from_base
+	def_unnamed_class
 	dynamic_type
 	exception_handlers
 	exceptions
