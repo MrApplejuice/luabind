@@ -173,7 +173,7 @@ namespace luabind
 		assert(L);
         get_weak_table(L);
         lua_rawgeti(L, -1, m_impl->ref);
-        lua_remove(L, -2);
+        lua_remove(L, lua_gettop(L) + 1 - 2);
     }
 
     lua_State* weak_ref::state() const

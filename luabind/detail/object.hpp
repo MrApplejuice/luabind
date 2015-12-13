@@ -911,7 +911,7 @@ inline void adl::index_proxy<Next>::push(lua_State* interpreter)
 
     lua_pushvalue(m_interpreter, m_key_index);
     lua_gettable(m_interpreter, -2);
-    lua_remove(m_interpreter, -2);
+    lua_remove(m_interpreter, lua_gettop(m_interpreter) + 1 - 2);
 }
 
 template<class Next>

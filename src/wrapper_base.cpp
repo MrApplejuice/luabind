@@ -38,7 +38,7 @@ namespace luabind { namespace detail
 
         lua_pushstring(L, name);
         lua_gettable(L, -2);
-        lua_replace(L, -2);
+        lua_replace(L, lua_gettop(L) + 1 - 2);
 
 		if (!is_luabind_function(L, -1))
 			return;

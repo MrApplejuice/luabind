@@ -345,7 +345,7 @@ namespace luabind
 		// duplicate the self-object
 		lua_pushvalue(obj.interpreter(), -2);
 		// remove the bottom self-object
-		lua_remove(obj.interpreter(), -3);
+		lua_remove(obj.interpreter(), lua_gettop(obj.interpreter()) + 1 - 3);
 
 		// now the function and self objects
 		// are on the stack. These will both

@@ -324,7 +324,7 @@ void luabind::detail::finalize(lua_State* L, class_rep* crep)
 	crep->get_table(L);
     lua_pushliteral(L, "__finalize");
 	lua_gettable(L, -2);
-	lua_remove(L, -2);
+	lua_remove(L, lua_gettop(L) + 1 - 2);
 
 	if (lua_isnil(L, -1))
 	{
