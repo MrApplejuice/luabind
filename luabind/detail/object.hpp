@@ -375,8 +375,10 @@ LUABIND_BINARY_OP_DEF(<, LUA_OPLT)
 
       ~iterator_proxy()
       {
-          if (m_interpreter)
-              lua_pop(m_interpreter, 2);
+          if (m_interpreter) {
+              lua_remove(m_interpreter, m_key_index);
+              lua_remove(m_interpreter, m_table_index);
+          }
       }
 
         // this will set the value to nil
@@ -609,8 +611,9 @@ namespace adl
 
       ~index_proxy()
       {
-          if (m_interpreter)
-              lua_pop(m_interpreter, 1);
+          if (m_interpreter) {
+              lua_remove(m_interpreter, m_key_index);
+          }
       }
 
       // This is non-const to prevent conversion on lvalues.
