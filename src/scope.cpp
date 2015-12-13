@@ -102,7 +102,7 @@ namespace luabind { namespace detail {
     {
         for (detail::registration* r = m_chain; r != 0; r = r->m_next)
         {
-			LUABIND_CHECK_STACK(L);
+            LUABIND_CHECK_STACK(L);
             r->register_(L);
         }
     }
@@ -170,13 +170,13 @@ namespace luabind {
 
         void register_(lua_State* L) const
         {
-			LUABIND_CHECK_STACK(L);
+            LUABIND_CHECK_STACK(L);
             assert(lua_gettop(L) >= 1);
 
             lua_pushstring(L, m_name);
             lua_gettable(L, -2);
 
-			detail::stack_pop p(L, 1); // pops the table on exit
+            detail::stack_pop p(L, 1); // pops the table on exit
 
             if (!lua_istable(L, -1))
             {
