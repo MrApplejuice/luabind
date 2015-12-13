@@ -38,7 +38,7 @@ void test_main(lua_State* L)
 
     module(L)
     [
-        class_<X>()
+        class_<X>("X", false)
           .def("f", &X::f)
     ];
 

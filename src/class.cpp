@@ -86,7 +86,7 @@ namespace luabind { namespace detail {
       
     class_registration::class_registration(char const* name, bool bindName)
     {
-        bindName = bindName;
+        this->bindName = bindName;
         m_name = name;
     }
 
@@ -97,7 +97,7 @@ namespace luabind { namespace detail {
         assert(lua_type(L, -1) == LUA_TTABLE);
 
         lua_pushstring(L, m_name);
-
+        
         detail::class_rep* crep;
 
         detail::class_registry* r = detail::class_registry::get_registry(L);
