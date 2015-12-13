@@ -6,25 +6,6 @@
 #include <luabind/luabind.hpp>
 #include <luabind/shared_ptr_converter.hpp>
 
-struct X
-{
-    X(int value)
-      : value(value)
-    {}
-
-    int value;
-};
-
-int get_value(boost::shared_ptr<X> const& p)
-{
-    return p->value;
-}
-
-boost::shared_ptr<X> filter(boost::shared_ptr<X> const& p)
-{
-    return p;
-}
-
 
 class ExistenceTester {
   public:
@@ -91,6 +72,26 @@ void test_object_exists_after_state_destruction() {
   etVar.reset();
   
   assert(ExistenceTester::number_of_initialized_objects == 0);
+}
+
+
+struct X
+{
+    X(int value)
+      : value(value)
+    {}
+
+    int value;
+};
+
+int get_value(boost::shared_ptr<X> const& p)
+{
+    return p->value;
+}
+
+boost::shared_ptr<X> filter(boost::shared_ptr<X> const& p)
+{
+    return p;
 }
 
 void test_main(lua_State* L)
