@@ -28,18 +28,26 @@ boost::shared_ptr<X> filter(boost::shared_ptr<X> const& p)
 
 class ExistenceTester {
   public:
+    static int number_of_initialized_objects;
+  
     typedef boost::shared_ptr<ExistenceTester> Ptr;
   
     const char* name;
     bool canDestroy;
     
-    ExistenceTester(const char* name) : name(name), canDestroy(false) {}
+    ExistenceTester(const char* name) : name(name), canDestroy(false) {
+      number_of_initialized_objects++;
+    }
+    
     virtual ~ExistenceTester() {
       if (!canDestroy) {
         report_failure((std::string("ExistenceTester '") + name + "' destroyed too early").c_str(), __FILE__, __LINE__);
       }
+      number_of_initialized_objects--;
     }
 };
+
+int ExistenceTester::number_of_initialized_objects = 0;
 
 #include <typeinfo>
 void test_object_exists_after_state_destruction() {
@@ -74,8 +82,6 @@ void test_object_exists_after_state_destruction() {
   
   lua_close(lua);
   
-  std::cout << "Segfault imminent" << std::endl;
-  
   assert(createdVar);
   
   createdVar->canDestroy = true;
@@ -83,6 +89,8 @@ void test_object_exists_after_state_destruction() {
   
   etVar->canDestroy = true;
   etVar.reset();
+  
+  assert(ExistenceTester::number_of_initialized_objects == 0);
 }
 
 void test_main(lua_State* L)
