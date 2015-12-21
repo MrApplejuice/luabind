@@ -48,18 +48,9 @@ void test_object_exists_after_state_destruction() {
       
   luabind::globals(lua)["created"].push(lua);
                
-  typename luabind::default_converter<ExistenceTester::Ptr> converter;
-  for (int i = 1; i <= lua_gettop(lua); i++) {
-    std::cout << "Stack " << i << ":" <<  lua_typename(lua, lua_type(lua, i)) << std::endl;
-    lua_pushvalue(lua, i);
-    std::cout << "   " << lua_tostring(lua, -1) << std::endl;
-    lua_pop(lua, 1);
-  }
-  std::cout << "match result = " << converter.match(lua, ExistenceTester::Ptr(), -1) << std::endl;
-  std::cout << typeid(converter).name() << std::endl;
-  createdVar = converter.apply(lua, ExistenceTester::Ptr(), -1);
-  
-  std::cout << createdVar->name << std::endl;
+  //typename luabind::default_converter<ExistenceTester::Ptr> converter;
+  //createdVar = converter.apply(lua, ExistenceTester::Ptr(), -1);
+  createdVar = luabind::object_cast<ExistenceTester::Ptr>(luabind::object(luabind::from_stack(lua, -1)));
   
   lua_close(lua);
   
@@ -98,8 +89,10 @@ void test_main(lua_State* L)
 {
     using namespace luabind;
 
+    test_object_exists_after_state_destruction();
+    
     module(L) [
-        class_<X>("X")
+        class_<X, boost::shared_ptr<X> >("X")
             .def(constructor<int>()),
         def("get_value", &get_value),
         def("filter", &filter)
@@ -111,8 +104,12 @@ void test_main(lua_State* L)
     );
 
     DOSTRING(L,
-        "assert(x == filter(x))\n"
+        "assert(x == x)\n"
+        "y = x\n"
+        "assert(y == x)\n"
     );
     
-    test_object_exists_after_state_destruction();
+    DOSTRING(L,
+        "assert(x == filter(x))\n"
+    );
 }
