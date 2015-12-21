@@ -47,11 +47,11 @@ void test_main(lua_State* L)
         "assert(X == nil)\n"
     );
     
-    // But can still be used
+    // But can still be used when passed from C++
     globals(L)["w"] = new X();
     
     DOSTRING(L,
-        "w:f()\n"
+        "w:f(1, 2)\n"
     );
 }
 
