@@ -71,6 +71,9 @@ namespace detail
       typename mpl::apply_wrap2<
           ConverterGenerator,unwrapped_type,cpp_to_lua
       >::type cv;
+      
+      // Useful print statement to observer conversion types
+      //   printf("apply_wrap2 type is %s  inferred from ConverterGenerator %s with type %s\n", typeid(cv).name(), typeid(ConverterGenerator).name(), typeid(unwrapped_type).name());
 
       cv.apply(
           interpreter
