@@ -99,30 +99,6 @@ namespace luabind { namespace detail
         std::size_t m_dependency_cnt; // counts dependencies
     };
 
-    template<class T>
-    struct delete_s
-    {
-        static void apply(void* ptr)
-        {
-            delete static_cast<T*>(ptr);
-        }
-    };
-
-    template<class T>
-    struct destruct_only_s
-    {
-        static void apply(void* ptr)
-        {
-            // Removes unreferenced formal parameter warning on VC7.
-            (void)ptr;
-#ifndef NDEBUG
-            int completeness_check[sizeof(T)];
-            (void)completeness_check;
-#endif
-            static_cast<T*>(ptr)->~T();
-        }
-    };
-
     LUABIND_API object_rep* get_instance(lua_State* L, int index);
     LUABIND_API void push_instance_metatable(lua_State* L);
     LUABIND_API object_rep* push_new_instance(lua_State* L, class_rep* cls);
