@@ -240,6 +240,7 @@ namespace luabind { namespace detail
                   int nargs = lua_gettop(L);
 
                   lua_pushvalue(L, lua_upvalueindex(1));
+                  
                   lua_gettable(L, 1 + i);
 
                   if (lua_isnil(L, -1))
