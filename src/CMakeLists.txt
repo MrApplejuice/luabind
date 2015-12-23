@@ -79,7 +79,6 @@ set(LUABIND_DETAIL_API
 	../luabind/detail/class_registry.hpp
 	../luabind/detail/class_rep.hpp
 	../luabind/detail/constructor.hpp
-	../luabind/detail/conversion_storage.hpp
 	../luabind/detail/convert_to_lua.hpp
 	../luabind/detail/debug.hpp
 	../luabind/detail/decorate_type.hpp
