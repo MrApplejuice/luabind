@@ -25,7 +25,6 @@
 #include <luabind/lua_include.hpp>
 
 #include <luabind/detail/stack_utils.hpp>
-#include <luabind/detail/conversion_storage.hpp>
 #include <luabind/luabind.hpp>
 #include <luabind/exception_handler.hpp>
 #include <luabind/get_main_thread.hpp>
