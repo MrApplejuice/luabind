@@ -164,6 +164,8 @@ void test_main(lua_State* L)
 	DOSTRING(L, "test2 = operator_tester2()");
 	DOSTRING(L, "test3 = operator_tester3()");
 
+	DOSTRING(L, "assert(test == test)");
+	
 	DOSTRING(L, "assert(tostring(test) == 'operator_tester')");
 	
 	DOSTRING(L, "assert(test() == 3.5)");
