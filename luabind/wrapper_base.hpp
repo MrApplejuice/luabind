@@ -58,7 +58,13 @@ namespace luabind
     struct wrap_base
     {
         friend struct detail::wrap_access;
+
+        // Copying of wrap_base results in a new object for lua
+        wrap_base(const wrap_base& other) : m_self() {}
+        wrap_base& operator=(const wrap_base& other) { return *this; }
+
         wrap_base() {}
+
         virtual ~wrap_base() {}
 
     #define BOOST_PP_ITERATION_PARAMS_1 (4, (0, LUABIND_MAX_ARITY, <luabind/wrapper_base.hpp>, 1))
