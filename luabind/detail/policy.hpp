@@ -237,6 +237,7 @@ namespace luabind { namespace detail
                 return;
 
             make_instance(L, ptr);
+            luabind::try_add_back_reference(L, ptr, -1);
         }
 
         template<class T>
@@ -290,6 +291,7 @@ namespace luabind { namespace detail
                 return;
 
             make_pointee_instance(L, x, mpl::true_());
+            luabind::try_add_back_reference(L, x, -1);
         }
 
         template<class T>
@@ -348,6 +350,7 @@ namespace luabind { namespace detail
                 return;
 
             make_instance(L, ptr);
+            luabind::try_add_back_reference(L, ptr, -1);
         }
 
         template<class T>
@@ -392,6 +395,7 @@ namespace luabind { namespace detail
                 return;
 
             make_pointee_instance(L, ref, mpl::false_());
+            luabind::try_add_back_reference(L, ref, -1);
         }
 
         template<class T>
@@ -444,6 +448,7 @@ namespace luabind { namespace detail
                 return;
 
             make_pointee_instance(L, ref, mpl::false_());
+            luabind::try_add_back_reference(L, ref, -1);
         }
 
         template<class T>

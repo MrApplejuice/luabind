@@ -33,6 +33,9 @@ bool get_back_reference(lua_State* L, T const& x);
 template<class T>
 bool move_back_reference(lua_State* L, T const& x);
 
+template<class T>
+void try_add_back_reference(lua_State* L, T const& x, int index);
+
 } // namespace luabind
 
 #endif // LUABIND_BACK_REFERENCE_FWD_040510_HPP

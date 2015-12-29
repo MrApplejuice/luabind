@@ -48,6 +48,7 @@ namespace luabind {
         lua_State* state() const;
         void get(lua_State* L) const;
 
+        bool is_weakref_valid() const;
     private:
         struct impl;
         impl* m_impl;

@@ -82,14 +82,23 @@ namespace detail
   
 } // namespace detail
 
+/**
+ * Returns the stored back reference for object x and pushes it on the
+ * lua stack - if possible. This only works if x inherits from
+ * wrap_base. If the value was not pushed succesfully, the function 
+ * returns false.
+ */
 template<class T>
 bool get_back_reference(lua_State* L, T const& x)
 {
 #ifndef LUABIND_NO_RTTI
     if (wrap_base const* w = detail::get_back_reference(x))
     {
-        detail::wrap_access::ref(*w).get(L);
-        return true;
+        if (detail::wrap_access::ref(*w).is_weakref_valid()) 
+        {
+            detail::wrap_access::ref(*w).get(L);
+            return true;
+        }
     }
 #endif
     return false;
@@ -108,6 +117,28 @@ bool move_back_reference(lua_State* L, T const& x)
     }
 #endif
     return false;
+}
+
+/**
+ * Tries to add a back reference for the given object. An initialized 
+ * reference must already be present at the lua stack position
+ * given by the parameter index. This value will remain untouched, but
+ * be set as the back reference for object x. This will only succeed
+ * if x inherits from wrap_base.
+ */
+template<class T>
+void try_add_back_reference(lua_State* L, T const& x, int index)
+{
+#ifndef LUABIND_NO_RTTI
+    if (wrap_base* w = const_cast<wrap_base*>(detail::get_back_reference(x)))
+    {
+        if (index < 0) {
+            index = lua_gettop(L) + 1 + index;
+        }
+        weak_ref tmpWeakRef(L, L, index);
+        detail::wrap_access::ref(*w).swap(tmpWeakRef);
+    }
+#endif
 }
 
 } // namespace luabind

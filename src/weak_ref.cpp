@@ -183,5 +183,9 @@ namespace luabind
         return m_impl->state;
     }
     
+    bool weak_ref::is_weakref_valid() const {
+        return m_impl != NULL;
+    }
+    
 } // namespace luabind
 
