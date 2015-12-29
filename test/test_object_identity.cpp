@@ -33,11 +33,11 @@ using namespace luabind;
 
 struct test_param : counted_type<test_param>, wrap_base
 {
-	luabind::object obj;
-	luabind::object obj2;
+  luabind::object obj;
+  luabind::object obj2;
 
-	bool operator==(test_param const& rhs) const
-	{ return obj == rhs.obj && obj2 == rhs.obj2; }
+  bool operator==(test_param const& rhs) const
+  { return obj == rhs.obj && obj2 == rhs.obj2; }
 };
 
 COUNTER_GUARD(test_param);
@@ -45,47 +45,76 @@ COUNTER_GUARD(test_param);
 static test_param * s_ptr = NULL;
 
 void store_ptr(test_param * ptr) {
-	s_ptr = ptr;
+  s_ptr = ptr;
 }
 
 test_param * get_ptr() {
-	return s_ptr;
+  return s_ptr;
 }
 
 void test_main(lua_State* L)
 {
-	using namespace luabind;
+  assert(boost::is_polymorphic<test_param>());
+	
+  using namespace luabind;
 
-	module(L)
-	[
-		class_<test_param>("test_param")
-			.def(constructor<>())
-			.def_readwrite("obj", &test_param::obj)
-			.def_readonly("obj2", &test_param::obj2)
-			.def(const_self == const_self)
-		,		
-		def("store_ptr", &store_ptr),
-		def("get_ptr", &get_ptr)
-	];
+  module(L)
+  [
+    class_<test_param>("test_param")
+      .def(constructor<>())
+      .def_readwrite("obj", &test_param::obj)
+      .def_readonly("obj2", &test_param::obj2)
+      .def(const_self == const_self)
+    ,    
+    def("store_ptr", &store_ptr),
+    def("get_ptr", &get_ptr)
+  ];
 
-	test_param temp_object;
-	globals(L)["temp"] = temp_object;
-	
-	object tab = newtable(L);
-	tab[temp_object] = 1;
-	TEST_CHECK( tab[temp_object] == 1 );
-	TEST_CHECK( tab[globals(L)["temp"]] == 1 );
-	
-	DOSTRING(L,
-		"local tab = {}\n"
-		"tab[temp] = 1\n"
-		"assert(tab[temp] == 1)");
-	
-	DOSTRING(L,
-		"t = test_param()\n"
-		"tab = {}\n"
-		"tab[t] = 1\n"
-		"store_ptr(t)\n"
-		"assert(tab[get_ptr()] == 1)");
+  test_param temp_object;
+  globals(L)["temp"] = temp_object;
+  
+  object tab = newtable(L);
+  tab[temp_object] = 1;
+  TEST_CHECK( tab[temp_object] == 1 );
+  TEST_CHECK( tab[globals(L)["temp"]] == 1 );
+  
+  // Test lua-based value copying
+  DOSTRING(L,
+    "a = test_param()\n");
+  DOSTRING(L, "assert(a == a)\n");
+  DOSTRING(L, 
+    "store_ptr(a)\n"
+     "b = get_ptr()\n");
+  DOSTRING(L, "assert(a == b)\n");
+  
+  // Test luabind object copying
+  luabind::object o = luabind::globals(L)["a"];
+  luabind::globals(L)["b"] = o;
+  TEST_CHECK(luabind::globals(L)["b"] == luabind::globals(L)["a"]);
+  DOSTRING(L, "assert(a == b)\n");
+  DOSTRING(L, "assert(rawequal(a, b))\n");
+
+  // Test luabind conversion and rewrapping-based copying
+  test_param* tp_ptr = luabind::object_cast<test_param*>(luabind::globals(L)["a"]);
+  luabind::globals(L)["b"] = tp_ptr;
+  TEST_CHECK(luabind::globals(L)["b"] == luabind::globals(L)["a"]);
+  DOSTRING(L, "assert(a == b)\n");
+
+  DOSTRING(L,
+    "tab = {}\n"
+    "tab[temp] = 1\n");
+  DOSTRING(L, "assert(rawequal(temp, temp))\n");
+  DOSTRING(L, "assert(tab[temp] == 1)");
+  
+  DOSTRING(L,
+    "t = test_param()\n"
+    "tab = {}\n"
+    "tab[t] = 1\n"
+    "store_ptr(t)\n"
+    "tc = get_ptr()\n");
+    
+   DOSTRING(L, "assert(rawequal(t, tc))\n");
+   DOSTRING(L, "assert(tab[t] == 1)\n");
+   DOSTRING(L, "assert(tab[tc] == 1)");
 }
 
