@@ -55,7 +55,7 @@ test_param * get_ptr() {
 void test_main(lua_State* L)
 {
   assert(boost::is_polymorphic<test_param>());
-	
+    
   using namespace luabind;
 
   module(L)
@@ -71,13 +71,39 @@ void test_main(lua_State* L)
   ];
 
   test_param temp_object;
+  
+  // This tests copies temp_object using assignment by-value
+  //   this does NOT! preserve raw-equality and that is why indexing
+  //   should fail
   globals(L)["temp"] = temp_object;
+  {
+    object tab = newtable(L);
+    tab[temp_object] = 1;
+    TEST_CHECK( tab[temp_object] != 1 );
+    TEST_CHECK( tab[globals(L)["temp"]] != 1 );
+  }
   
-  object tab = newtable(L);
-  tab[temp_object] = 1;
-  TEST_CHECK( tab[temp_object] == 1 );
-  TEST_CHECK( tab[globals(L)["temp"]] == 1 );
-  
+  // Assignment by pointer causes the original object to be used, this is
+  //   why raw equlity works in this case!
+  globals(L)["temp"] = &temp_object;
+  {
+    object tab = newtable(L);
+    tab[&temp_object] = 1;
+    TEST_CHECK( tab[&temp_object] == 1 );
+    TEST_CHECK( tab[globals(L)["temp"]] == 1 );
+  }
+
+  // Re-check of re-assignment
+  //   Internally, the earlier tests sets a backref for temp_object. 
+  //   This backref must be cleared when copying the object
+  globals(L)["temp"] = temp_object;
+  {
+    object tab = newtable(L);
+    tab[temp_object] = 1;
+    TEST_CHECK( tab[temp_object] != 1 );
+    TEST_CHECK( tab[globals(L)["temp"]] != 1 );
+  }
+
   // Test lua-based value copying
   DOSTRING(L,
     "a = test_param()\n");
