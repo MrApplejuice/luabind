@@ -156,6 +156,7 @@ inline int sum_scores(int const* first, int const* last)
         BOOST_PP_CAT(p,n); \
     typename mpl::apply_wrap2< \
         BOOST_PP_CAT(p,n), BOOST_PP_CAT(a,n), lua_to_cpp>::type BOOST_PP_CAT(c,n); \
+    printf("call %d parameter: %s\n", n, typeid(BOOST_PP_CAT(c,n)).name()); \
     int const BOOST_PP_CAT(index,n) = LUABIND_INVOKE_NEXT_INDEX(n);
 
 #  define LUABIND_INVOKE_COMPUTE_SCORE(n)                                   \

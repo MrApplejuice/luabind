@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 // OR OTHER DEALINGS IN THE SOFTWARE.
 
+//#define LUABIND_SHOW_CONVERTER
 
 #ifndef LUABIND_POLICY_HPP_INCLUDED
 #define LUABIND_POLICY_HPP_INCLUDED
@@ -227,6 +228,10 @@ namespace luabind { namespace detail
         template<class T>
         void apply(lua_State* L, T* ptr)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
+            
             if (ptr == 0) 
             {
                 lua_pushnil(L);
@@ -243,6 +248,9 @@ namespace luabind { namespace detail
         template<class T>
         T* apply(lua_State*, by_pointer<T>, int)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
             return static_cast<T*>(result);
         }
 
@@ -287,6 +295,10 @@ namespace luabind { namespace detail
         template<class T>
         void apply(lua_State* L, T x)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
+
             if (luabind::get_back_reference(L, x))
                 return;
 
@@ -297,6 +309,10 @@ namespace luabind { namespace detail
         template<class T>
         T apply(lua_State*, by_value<T>, int)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
+
             return *static_cast<T*>(result);
         }
 
@@ -340,6 +356,10 @@ namespace luabind { namespace detail
         template<class T>
         void apply(lua_State* L, const T* ptr)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
+
             if (ptr == 0) 
             {
                 lua_pushnil(L);
@@ -356,6 +376,10 @@ namespace luabind { namespace detail
         template<class T>
         T const* apply(lua_State*, by_const_pointer<T>, int)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
+
             return static_cast<T const*>(result);
         }
 
@@ -391,6 +415,10 @@ namespace luabind { namespace detail
         template<class T>
         void apply(lua_State* L, T& ref)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
+
             if (luabind::get_back_reference(L, ref))
                 return;
 
@@ -401,6 +429,10 @@ namespace luabind { namespace detail
         template<class T>
         T& apply(lua_State* L, by_reference<T>, int index)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
+
             assert(!lua_isnil(L, index));
             return *pointer_converter::apply(L, by_pointer<T>(), index);
         }
@@ -444,6 +476,10 @@ namespace luabind { namespace detail
         template<class T>
         void apply(lua_State* L, T const& ref)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
+
             if (luabind::get_back_reference(L, ref))
                 return;
 
@@ -454,6 +490,10 @@ namespace luabind { namespace detail
         template<class T>
         T const& apply(lua_State*, by_const_reference<T>, int)
         {
+#ifdef LUABIND_SHOW_CONVERTER
+            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+#endif
+
             return *static_cast<T*>(result);
         }
 

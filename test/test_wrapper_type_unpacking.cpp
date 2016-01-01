@@ -22,7 +22,7 @@
 
 #include "test.hpp"
 #include <luabind/luabind.hpp>
-#include <luabind/shared_ptr_converter.hpp>
+//#include <luabind/shared_ptr_converter.hpp>
 
 
 #include <boost/shared_ptr.hpp>
