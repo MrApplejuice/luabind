@@ -21,9 +21,10 @@
 // OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "test.hpp"
-#include <luabind/luabind.hpp>
-#include <luabind/shared_ptr_converter.hpp>
 
+#include <iostream>
+
+#include <luabind/luabind.hpp>
 
 #include <boost/shared_ptr.hpp>
 
