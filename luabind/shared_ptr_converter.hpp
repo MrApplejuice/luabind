@@ -63,9 +63,9 @@ namespace detail
         
         // Try a direct-extraction of the boost::shared_ptr (in case that is the internally used holder pointer, already)
         luabind::detail::value_converter directPointerConverter;
-        int directPtrMatchResult = directPointerConverter.match(lua, luabind::detail::by_value< ConversionType >(), -1);
+        int directPtrMatchResult = directPointerConverter.match(lua, luabind::detail::by_value< ConversionType >(), index);
         if (directPtrMatchResult == 0) {
-          return directPointerConverter.apply(lua, luabind::detail::by_value< ConversionType >(), -1);
+          return directPointerConverter.apply(lua, luabind::detail::by_value< ConversionType >(), index);
         }
         
         luabind::object object(luabind::from_stack(lua, index));
