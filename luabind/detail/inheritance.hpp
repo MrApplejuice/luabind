@@ -163,6 +163,19 @@ struct registered_class<T const>
   : registered_class<T>
 {};
 
+
+/**
+ * Retrieves the target class_id that pointer points at. If pointer is not a pointer
+ * to another class_id, this function returns false.
+ */
+bool get_pointed_type(class_id pointer, class_id& target);
+
+/**
+ * Registeres a new class relation between a pointer class_id and a target class_id.
+ */
+void register_registered_class_pointer_relation(class_id pointer, class_id target);
+
+
 }} // namespace luabind::detail
 
 #endif // LUABIND_INHERITANCE_090217_HPP

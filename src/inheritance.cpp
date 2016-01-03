@@ -255,4 +255,21 @@ LUABIND_API class_id allocate_class_id(type_id const& cls)
     return inserted.first->second;
 }
 
+
+typedef std::map<class_id, class_id> RegisteredClassPointerRelationType;
+static RegisteredClassPointerRelationType registered_class_pointer_relations;
+
+bool get_pointed_type(class_id pointer, class_id& target) {
+  RegisteredClassPointerRelationType::iterator found = registered_class_pointer_relations.find(pointer);
+  if (found == registered_class_pointer_relations.end()) {
+    return false;
+  }
+  target = found->second;
+  return true;
+}
+
+void register_registered_class_pointer_relation(class_id pointer, class_id target) {
+  registered_class_pointer_relations[pointer] = target;
+}
+
 }} // namespace luabind::detail
