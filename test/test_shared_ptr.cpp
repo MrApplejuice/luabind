@@ -4,8 +4,8 @@
 
 #include "test.hpp"
 #include <luabind/luabind.hpp>
-#include <luabind/shared_ptr_converter.hpp>
-
+#include <boost/shared_ptr.hpp>
+//#include <luabind/shared_ptr_converter.hpp>
 
 class ExistenceTester {
   public:
@@ -66,7 +66,7 @@ void test_object_exists_after_state_destruction() {
 }
 
 
-struct X
+struct X : public luabind::wrap_base
 {
     X(int value)
       : value(value)
@@ -75,12 +75,12 @@ struct X
     int value;
 };
 
-int get_value(boost::shared_ptr<X> const& p)
+int get_value(boost::shared_ptr<X> p)
 {
     return p->value;
 }
 
-boost::shared_ptr<X> filter(boost::shared_ptr<X> const& p)
+boost::shared_ptr<X> filter(boost::shared_ptr<X> p)
 {
     return p;
 }
