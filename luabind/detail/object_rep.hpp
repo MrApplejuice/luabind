@@ -86,12 +86,11 @@ namespace luabind { namespace detail
         }
 
     private:
+        object_rep(object_rep const&)
+        {}
 
-    object_rep(object_rep const&)
-    {}
-
-    void operator=(object_rep const&)
-    {}
+        void operator=(object_rep const&)
+        {}
 
         instance_holder* m_instance;
         boost::aligned_storage<32> m_instance_buffer;
