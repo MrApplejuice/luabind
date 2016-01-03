@@ -8,10 +8,14 @@
 #include <map>
 #include <vector>
 #include <queue>
+
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+
 #include <luabind/typeid.hpp>
 #include <luabind/detail/inheritance.hpp>
 
@@ -255,11 +259,81 @@ LUABIND_API class_id allocate_class_id(type_id const& cls)
     return inserted.first->second;
 }
 
+struct WeakReentrantLock {
+public:
+    boost::mutex mutex;
+    boost::condition_variable release_notification;
+    
+    /** 
+     * If -1, the reentrant lock is locked hard (no other entries are allowed). 
+     * If positive, this counts the number of weak reentrant locks on the lock.
+     */
+    int weakLockCount; 
+    
+    class Lock {
+    public:
+        typedef boost::unique_lock<boost::mutex> LockType;
+        
+        Lock& operator=(Lock& other) {
+          relockRef = other.relockRef;
+          wasHard = other.wasHard;
+          lock = other.lock;
+          other.lock = NULL;
+          
+          return *this;
+        }
+        
+        Lock(Lock& other) : relockRef(other.relockRef), lock(other.lock), wasHard(other.wasHard) {
+          other.lock = NULL;  
+        }
+        
+        Lock(WeakReentrantLock& reLock, bool lockHard) : relockRef(&reLock), lock(new LockType(reLock.mutex)), wasHard(lockHard) {
+          if (lockHard) {
+            while (relockRef->weakLockCount != 0) {
+              relockRef->release_notification.wait(*lock);
+            }
+            relockRef->weakLockCount = -1;
+          } else {
+            while (relockRef->weakLockCount < 0) {
+              relockRef->release_notification.wait(*lock);
+            }
+            relockRef->weakLockCount += 1;
+            lock->unlock();
+          }
+        }
+        
+        virtual ~Lock() {
+          if (lock) {
+            if (wasHard) {
+              relockRef->weakLockCount = 0;
+            } else {
+              lock->lock();
+              relockRef->weakLockCount -= 1;
+            }
+            relockRef->release_notification.notify_all();
+            
+            delete lock;
+          }
+        }
+    private:
+        bool dead;
+    
+        WeakReentrantLock* relockRef;
+        LockType* lock;
+        
+        bool wasHard; //! Saves if this was a hard or weak lock
+    };
+
+    WeakReentrantLock() : weakLockCount() {}
+};
 
 typedef std::map<class_id, std::vector<class_id> > RegisteredClassPointerRelationType;
 static RegisteredClassPointerRelationType registered_class_pointer_relations;
+static WeakReentrantLock registered_class_pointer_relations_lock;
 
 bool get_pointed_types(class_id pointer, std::vector<class_id>& target) {
+  WeakReentrantLock::Lock lock(registered_class_pointer_relations_lock, false);
+  
   RegisteredClassPointerRelationType::iterator found = registered_class_pointer_relations.find(pointer);
   if (found == registered_class_pointer_relations.end()) {
     return false;
@@ -269,6 +343,7 @@ bool get_pointed_types(class_id pointer, std::vector<class_id>& target) {
 }
 
 void register_registered_class_pointer_relation(class_id pointer, class_id target) {
+  WeakReentrantLock::Lock lock(registered_class_pointer_relations_lock, true);
   registered_class_pointer_relations[pointer].push_back(target);
 }
 
