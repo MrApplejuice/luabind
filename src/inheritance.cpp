@@ -256,10 +256,10 @@ LUABIND_API class_id allocate_class_id(type_id const& cls)
 }
 
 
-typedef std::map<class_id, class_id> RegisteredClassPointerRelationType;
+typedef std::map<class_id, std::vector<class_id> > RegisteredClassPointerRelationType;
 static RegisteredClassPointerRelationType registered_class_pointer_relations;
 
-bool get_pointed_type(class_id pointer, class_id& target) {
+bool get_pointed_types(class_id pointer, std::vector<class_id>& target) {
   RegisteredClassPointerRelationType::iterator found = registered_class_pointer_relations.find(pointer);
   if (found == registered_class_pointer_relations.end()) {
     return false;
@@ -269,7 +269,7 @@ bool get_pointed_type(class_id pointer, class_id& target) {
 }
 
 void register_registered_class_pointer_relation(class_id pointer, class_id target) {
-  registered_class_pointer_relations[pointer] = target;
+  registered_class_pointer_relations[pointer].push_back(target);
 }
 
 }} // namespace luabind::detail

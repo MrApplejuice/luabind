@@ -835,22 +835,7 @@ namespace luabind
          */
         static void registerHeldTypePointerRelation() {
             typedef class_<T, X1, X2, X3> ThisType;
-            
-            detail::class_id target_id;
-            if (detail::get_pointed_type(detail::registered_class<HeldType>::id, target_id)) {
-                if (target_id != detail::registered_class<ThisType>::id) {
-                    std::cerr << "class_id " 
-                              << detail::registered_class<HeldType>::id 
-                              << " already registered to point at class_id "
-                              << target_id
-                              << " and not at class_id "
-                              << detail::registered_class<ThisType>::id
-                              << std::endl;
-                    abort();
-                }
-            } else {
-                detail::register_registered_class_pointer_relation(detail::registered_class<HeldType>::id, detail::registered_class<ThisType>::id);
-            }
+            detail::register_registered_class_pointer_relation(detail::registered_class<HeldType>::id, detail::registered_class<ThisType>::id);
         }
 
         void init()
