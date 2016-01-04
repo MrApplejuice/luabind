@@ -256,7 +256,7 @@ namespace luabind { namespace detail
             if (obj->is_const())
                 return -1;
 
-            std::pair<void*, int> s = obj->get_instance(registered_class<T>::id);
+            std::pair<void*, int> s = obj->get_instance<T>();
             result = s.first;
             return s.second;
         }
@@ -310,7 +310,7 @@ namespace luabind { namespace detail
             object_rep* obj = get_instance(L, index);
             if (obj == 0) return -1;
 
-            std::pair<void*, int> s = obj->get_instance(registered_class<T>::id);
+            std::pair<void*, int> s = obj->get_instance<T>();
             result = s.first;
             return s.second;
         }
@@ -365,7 +365,7 @@ namespace luabind { namespace detail
             if (lua_isnil(L, index)) return 0;
             object_rep* obj = get_instance(L, index);
             if (obj == 0) return -1; // if the type is not one of our own registered types, classify it as a non-match
-            std::pair<void*, int> s = obj->get_instance(registered_class<T>::id);
+            std::pair<void*, int> s = obj->get_instance<T>();
             if (s.second >= 0 && !obj->is_const())
                 s.second += 10;
             result = s.first;
@@ -414,7 +414,7 @@ namespace luabind { namespace detail
             if (obj->is_const())
                 return -1;
 
-            std::pair<void*, int> s = obj->get_instance(registered_class<T>::id);
+            std::pair<void*, int> s = obj->get_instance<T>();
             result = s.first;
             return s.second;
         }
@@ -463,7 +463,7 @@ namespace luabind { namespace detail
             object_rep* obj = get_instance(L, index);
             if (obj == 0) return -1; // if the type is not one of our own registered types, classify it as a non-match
 
-            std::pair<void*, int> s = obj->get_instance(registered_class<T>::id);
+            std::pair<void*, int> s = obj->get_instance<T>();
             if (s.second >= 0 && !obj->is_const())
                 s.second += 10;
             result = s.first;

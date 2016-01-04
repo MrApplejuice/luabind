@@ -197,7 +197,7 @@ struct PointerDescriptor {
  * Retrieves the target class_id that pointer points at. If pointer is not a pointer
  * to another class_id, this function returns false.
  */
-bool get_pointed_type(class_id pointer, class_id& target);
+bool get_pointed_types(class_id pointer, std::vector<PointerDescriptor>& target);
 
 /**
  * Registeres a new class relation between a pointer class_id and a target class_id.

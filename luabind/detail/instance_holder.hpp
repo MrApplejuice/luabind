@@ -86,6 +86,19 @@ public:
     {
         if (target == registered_class<P>::id)
             return std::pair<void*, int>(&this->p, 0);
+            
+        if (pointer_type<P>::type_id != PT_UNKNOWN) {
+            // Possible hail-mary cast to the correct type
+            std::vector<PointerDescriptor> pointerDesc;
+            if (get_pointed_types(target, pointerDesc)) {
+                for (std::vector<PointerDescriptor>::iterator it = pointerDesc.begin(); it != pointerDesc.end(); it++) {
+                    if (it->pointer_type == pointer_type<P>::type_id) {
+                        printf("Must check here if the pointer can be converted into the other type...\n");
+                        break;
+                    }
+                }
+            }
+        }
 
         void* naked_ptr = const_cast<void*>(static_cast<void const*>(
             weak ? weak : get_pointer(p)));
