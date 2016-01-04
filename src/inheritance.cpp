@@ -327,11 +327,11 @@ public:
     WeakReentrantLock() : weakLockCount() {}
 };
 
-typedef std::map<class_id, std::vector<class_id> > RegisteredClassPointerRelationType;
+typedef std::map<class_id, std::vector<PointerDescriptor> > RegisteredClassPointerRelationType;
 static RegisteredClassPointerRelationType registered_class_pointer_relations;
 static WeakReentrantLock registered_class_pointer_relations_lock;
 
-bool get_pointed_types(class_id pointer, std::vector<class_id>& target) {
+bool get_pointed_types(class_id pointer, std::vector<PointerDescriptor>& target) {
   WeakReentrantLock::Lock lock(registered_class_pointer_relations_lock, false);
   
   RegisteredClassPointerRelationType::iterator found = registered_class_pointer_relations.find(pointer);
@@ -342,9 +342,9 @@ bool get_pointed_types(class_id pointer, std::vector<class_id>& target) {
   return true;
 }
 
-void register_registered_class_pointer_relation(class_id pointer, class_id target) {
+void register_registered_class_pointer_relation(class_id pointer, ComplexPointerTypes pointer_type, class_id target) {
   WeakReentrantLock::Lock lock(registered_class_pointer_relations_lock, true);
-  registered_class_pointer_relations[pointer].push_back(target);
+  registered_class_pointer_relations[pointer].push_back(PointerDescriptor(pointer_type, target));
 }
 
 }} // namespace luabind::detail

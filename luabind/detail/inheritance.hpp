@@ -11,6 +11,8 @@
 # include <memory>
 # include <vector>
 # include <luabind/typeid.hpp>
+
+# include <boost/shared_ptr.hpp>
 # include <boost/scoped_ptr.hpp>
 
 namespace luabind { namespace detail {
@@ -164,6 +166,33 @@ struct registered_class<T const>
 {};
 
 
+enum ComplexPointerTypes {
+    PT_UNKNOWN,
+    PT_BOOST_SHARED_PTR
+};
+
+template <typename T>
+struct pointer_type {
+    static const ComplexPointerTypes type_id = PT_UNKNOWN;
+};
+
+template <typename T>
+struct pointer_type< boost::shared_ptr<T> > {
+    static const ComplexPointerTypes type_id = PT_BOOST_SHARED_PTR;
+};
+
+struct PointerDescriptor {
+    ComplexPointerTypes pointer_type;
+    class_id target_id;
+    
+    PointerDescriptor(const PointerDescriptor& other) {
+        *this = other;
+    }
+    PointerDescriptor(ComplexPointerTypes pointer_type, class_id target_id) :
+      pointer_type(pointer_type),
+      target_id(target_id) {}
+};
+
 /**
  * Retrieves the target class_id that pointer points at. If pointer is not a pointer
  * to another class_id, this function returns false.
@@ -173,7 +202,16 @@ bool get_pointed_type(class_id pointer, class_id& target);
 /**
  * Registeres a new class relation between a pointer class_id and a target class_id.
  */
-void register_registered_class_pointer_relation(class_id pointer, class_id target);
+void register_registered_class_pointer_relation(class_id pointer, ComplexPointerTypes pointer_type, class_id target);
+
+/**
+ * Registeres a new class relation between a pointer class_id and a target class_id, inferring all parameters
+ * from the template arguments.
+ */
+template <typename T>
+void register_registered_class_pointer_relation(class_id target) {
+    register_registered_class_pointer_relation(registered_class<T>::id, pointer_type<T>::type_id, target);
+}
 
 
 }} // namespace luabind::detail
