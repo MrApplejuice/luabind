@@ -835,7 +835,7 @@ namespace luabind
          */
         static void registerHeldTypePointerRelation() {
             typedef class_<T, X1, X2, X3> ThisType;
-            detail::register_registered_class_pointer_relation<HeldType>(detail::registered_class<ThisType>::id);
+            detail::register_registered_class_pointer_relation<HeldType>(detail::registered_class<T>::id);
         }
 
         void init()

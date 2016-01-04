@@ -87,24 +87,27 @@ public:
         if (target == registered_class<P>::id)
             return std::pair<void*, int>(&this->p, 0);
             
-        if (pointer_type<P>::type_id != PT_UNKNOWN) {
-            // Possible hail-mary cast to the correct type
-            std::vector<PointerDescriptor> pointerDesc;
-            if (get_pointed_types(target, pointerDesc)) {
-                for (std::vector<PointerDescriptor>::iterator it = pointerDesc.begin(); it != pointerDesc.end(); it++) {
-                    if (it->pointer_type == pointer_type<P>::type_id) {
-                        printf("Must check here if the pointer can be converted into the other type...\n");
-                        break;
-                    }
-                }
-            }
-        }
-
         void* naked_ptr = const_cast<void*>(static_cast<void const*>(
             weak ? weak : get_pointer(p)));
 
         if (!naked_ptr)
             return std::pair<void*, int>((void*)0, 0);
+
+        if (pointer_type<P>::type_id != PT_UNKNOWN) {
+            // Possible hail-mary cast to the correct type for supported complex pointer types
+            std::vector<PointerDescriptor> pointerDesc;
+            if (get_pointed_types(target, pointerDesc)) {
+                for (std::vector<PointerDescriptor>::iterator it = pointerDesc.begin(); it != pointerDesc.end(); it++) {
+                    if (it->pointer_type == pointer_type<P>::type_id) {
+                        std::pair<void*, int> castable_check = casts.cast(naked_ptr, static_class_id(false ? get_pointer(p) : 0), it->target_id, dynamic_id, dynamic_ptr);
+                        if (castable_check.second >= 0) {
+                            printf("Found possible cast!!!\n");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         return casts.cast(
             naked_ptr
