@@ -184,7 +184,7 @@ std::pair<void*, int> cast_graph::impl::cast(
 
             return std::make_pair(qe.p, qe.distance);
         }
-
+        
         BOOST_FOREACH(edge const& e, v.edges)
         {
             if (visited[e.target])

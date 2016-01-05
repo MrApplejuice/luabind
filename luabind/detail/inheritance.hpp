@@ -14,10 +14,117 @@
 
 # include <boost/shared_ptr.hpp>
 # include <boost/scoped_ptr.hpp>
+# include <boost/type_traits.hpp>
+# include <boost/utility.hpp>
 
 namespace luabind { namespace detail {
 
-typedef void*(*cast_function)(void*);
+class CastRefContainer
+{
+public:
+    class DestructorCallerBase {
+        public:
+            virtual void destroy() {}
+    };
+
+    template <typename T>
+    class SpecificDestructorCaller {
+        public:
+            SpecificDestructorCaller(T* ptr) : ptr(ptr) {}
+            virtual void destroy() {
+                if (ptr) {
+                    ptr->~T();
+                    ptr = NULL;
+                }
+            }
+        private:
+            T* ptr;
+    };
+
+    template <typename T, typename IsTrivialDestructor>
+    struct createDestructor_aux {
+        static DestructorCallerBase* apply(T* ptr) {
+            abort();
+        }
+    };
+    
+    /**
+     * Trivial destructor case...
+     */
+    template <typename T>
+    struct createDestructor_aux<T, boost::true_type> {
+        static DestructorCallerBase* apply(T* ptr) {
+            return new DestructorCallerBase();
+        }
+    };
+    
+    /**
+     * Callable destructor case
+     */
+    template <typename T>
+    struct createDestructor_aux<T, boost::false_type> {
+        static DestructorCallerBase* apply(T* ptr) {
+            return new SpecificDestructorCaller<T>(ptr);
+        }
+    };
+    
+    template <typename T>
+    static DestructorCallerBase* createDestructor(T* ptr) {
+        return createDestructor_aux<T, typename boost::has_trivial_destructor<T>::type>::apply(ptr);
+    }
+    
+    CastRefContainer() : data(NULL), destructor(NULL) {}
+    
+    CastRefContainer(CastRefContainer& other) : data(NULL), destructor(NULL) {
+        *this = other;
+    }
+    
+    template <typename T>
+    CastRefContainer(const T& ref) : 
+                  data(malloc(sizeof(T))), 
+                  destructor(NULL) {
+        T* dest_ptr = new(data) T();
+        destructor = createDestructor(dest_ptr);
+        *dest_ptr = ref;
+    }
+
+    virtual ~CastRefContainer() {
+        freeData();
+    }
+    
+    virtual void* get() {
+        return data;
+    }
+    
+    CastRefContainer& operator=(CastRefContainer& other) {
+        freeData();
+        
+        data = other.data;
+        destructor = other.destructor;
+        
+        other.data = NULL;
+        other.destructor = NULL;
+        
+        return *this;
+    }
+private:
+    void freeData() {
+        if (data) {
+            if (destructor) {
+                destructor->destroy();
+            }
+            free(data);
+        }
+        if (destructor) {
+            delete destructor;
+        }
+    }
+
+    void* data;
+    DestructorCallerBase* destructor;
+};
+
+typedef CastRefContainer(*cast_function)(CastRefContainer);
 typedef std::size_t class_id;
 
 class_id const unknown_class = (std::numeric_limits<class_id>::max)();
@@ -133,18 +240,18 @@ inline void class_map::put(class_id id, class_rep* cls)
 template <class S, class T>
 struct static_cast_
 {
-    static void* execute(void* p)
+    static CastRefContainer execute(CastRefContainer p)
     {
-        return static_cast<T*>(static_cast<S*>(p));
+        return CastRefContainer(static_cast<T*>(static_cast<S*>(p.get())));
     }
 };
 
 template <class S, class T>
 struct dynamic_cast_
 {
-    static void* execute(void* p)
+    static CastRefContainer execute(CastRefContainer p)
     {
-        return dynamic_cast<T*>(static_cast<S*>(p));
+        return CastRefContainer(dynamic_cast<T*>(static_cast<S*>(p.get())));
     }
 };
 

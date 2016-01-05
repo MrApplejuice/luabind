@@ -285,7 +285,6 @@ namespace luabind
             void add_inner_scope(scope& s);
 
             void add_cast(class_id src, class_id target, cast_function cast);
-
         private:
             class_registration* m_registration;
         };
