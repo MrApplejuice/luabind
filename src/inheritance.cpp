@@ -112,7 +112,7 @@ namespace
 class cast_graph::impl
 {
 public:
-    std::pair<void*, int> cast(
+    std::pair<CastRefContainer, int> cast(
         void* p, class_id src, class_id target
       , class_id dynamic_id, void const* dynamic_ptr) const;
     void insert(class_id src, class_id target, cast_function cast);
@@ -127,20 +127,20 @@ namespace
 
   struct queue_entry
   {
-      queue_entry(void* p, class_id vertex_id, int distance)
+      queue_entry(CastRefContainer p, class_id vertex_id, int distance)
         : p(p)
         , vertex_id(vertex_id)
         , distance(distance)
       {}
 
-      void* p;
+      CastRefContainer p;
       class_id vertex_id;
       int distance;
   };
 
 } // namespace unnamed
 
-std::pair<void*, int> cast_graph::impl::cast(
+std::pair<CastRefContainer, int> cast_graph::impl::cast(
     void* const p, class_id src, class_id target
   , class_id dynamic_id, void const* dynamic_ptr) const
 {
@@ -148,7 +148,7 @@ std::pair<void*, int> cast_graph::impl::cast(
         return std::make_pair(p, 0);
 
     if (src >= m_vertices.size() || target >= m_vertices.size())
-        return std::pair<void*, int>((void*)0, -1);
+        return std::pair<CastRefContainer, int>(CastRefContainer(), -1);
 
     std::ptrdiff_t const object_offset =
         (char const*)dynamic_ptr - (char const*)p;
@@ -163,13 +163,14 @@ std::pair<void*, int> cast_graph::impl::cast(
     }
 
     std::queue<queue_entry> q;
-    q.push(queue_entry(p, src, 0));
+    printf("Pushing first queue value\n");
+    q.push(queue_entry(CastRefContainer(p), src, 0));
 
     boost::dynamic_bitset<> visited(m_vertices.size());
 
     while (!q.empty())
     {
-        queue_entry const qe = q.front();
+        queue_entry qe = q.front();
         q.pop();
 
         visited[qe.vertex_id] = true;
@@ -179,7 +180,7 @@ std::pair<void*, int> cast_graph::impl::cast(
         {
             m_cache.put(
                 src, target, dynamic_id, object_offset
-              , (char*)qe.p - (char*)p, qe.distance
+              , (char*)qe.p.get() - (char*)p, qe.distance
             );
 
             return std::make_pair(qe.p, qe.distance);
@@ -189,14 +190,14 @@ std::pair<void*, int> cast_graph::impl::cast(
         {
             if (visited[e.target])
                 continue;
-            if (void* casted = e.cast(qe.p))
+            if (CastRefContainer casted = e.cast(qe.p))
                 q.push(queue_entry(casted, e.target, qe.distance + 1));
         }
     }
 
     m_cache.put(src, target, dynamic_id, object_offset, cache::invalid, -1);
 
-    return std::pair<void*, int>((void*)0, -1);
+    return std::pair<CastRefContainer, int>((void*)0, -1);
 }
 
 void cast_graph::impl::insert(
@@ -224,7 +225,7 @@ void cast_graph::impl::insert(
     }
 }
 
-std::pair<void*, int> cast_graph::cast(
+std::pair<CastRefContainer, int> cast_graph::cast(
     void* p, class_id src, class_id target
   , class_id dynamic_id, void const* dynamic_ptr) const
 {

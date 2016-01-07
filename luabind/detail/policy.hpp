@@ -215,10 +215,10 @@ namespace luabind { namespace detail
         typedef mpl::false_ is_native;
 
         pointer_converter()
-          : result(0)
+          : result()
         {}
 
-        void* result;
+        CastRefContainer result;
 
         int consumed_args(...) const
         {
@@ -251,7 +251,8 @@ namespace luabind { namespace detail
 #ifdef LUABIND_SHOW_CONVERTER
             printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
 #endif
-            return static_cast<T*>(result);
+            assert(result);
+            return static_cast<T*>(result.get());
         }
 
         template<class T>
@@ -264,7 +265,7 @@ namespace luabind { namespace detail
             if (obj->is_const())
                 return -1;
 
-            std::pair<void*, int> s = obj->get_instance<T>();
+            std::pair<detail::CastRefContainer, int> s = obj->get_instance<T>();
             result = s.first;
             return s.second;
         }
@@ -287,10 +288,10 @@ namespace luabind { namespace detail
         }
 
         value_converter()
-          : result(0)
+          : result()
         {}
 
-        void* result;
+        CastRefContainer result;
 
         template<class T>
         void apply(lua_State* L, T x)
@@ -313,7 +314,8 @@ namespace luabind { namespace detail
             printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
 #endif
 
-            return *static_cast<T*>(result);
+            assert(result);
+            return *static_cast<T*>(result.get());
         }
 
         template<class T>
@@ -326,7 +328,7 @@ namespace luabind { namespace detail
             object_rep* obj = get_instance(L, index);
             if (obj == 0) return -1;
 
-            std::pair<void*, int> s = obj->get_instance<T>();
+            std::pair<detail::CastRefContainer, int> s = obj->get_instance<T>();
             result = s.first;
             return s.second;
         }
@@ -348,10 +350,10 @@ namespace luabind { namespace detail
         }
 
         const_pointer_converter()
-          : result(0)
+          : result()
         {}
 
-        void* result;
+        CastRefContainer result;
 
         template<class T>
         void apply(lua_State* L, const T* ptr)
@@ -380,7 +382,8 @@ namespace luabind { namespace detail
             printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
 #endif
 
-            return static_cast<T const*>(result);
+            assert(result);
+            return static_cast<T const*>(result.get());
         }
 
         template<class T>
@@ -389,7 +392,7 @@ namespace luabind { namespace detail
             if (lua_isnil(L, index)) return 0;
             object_rep* obj = get_instance(L, index);
             if (obj == 0) return -1; // if the type is not one of our own registered types, classify it as a non-match
-            std::pair<void*, int> s = obj->get_instance<T>();
+            std::pair<detail::CastRefContainer, int> s = obj->get_instance<T>();
             if (s.second >= 0 && !obj->is_const())
                 s.second += 10;
             result = s.first;
@@ -446,7 +449,7 @@ namespace luabind { namespace detail
             if (obj->is_const())
                 return -1;
 
-            std::pair<void*, int> s = obj->get_instance<T>();
+            std::pair<detail::CastRefContainer, int> s = obj->get_instance<T>();
             result = s.first;
             return s.second;
         }
@@ -468,10 +471,10 @@ namespace luabind { namespace detail
         }
 
         const_ref_converter()
-          : result(0)
+          : result()
         {}
 
-        void* result;
+        CastRefContainer result;
 
         template<class T>
         void apply(lua_State* L, T const& ref)
@@ -494,7 +497,8 @@ namespace luabind { namespace detail
             printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
 #endif
 
-            return *static_cast<T*>(result);
+            assert(result);
+            return *static_cast<T*>(result.get());
         }
 
         template<class T>
@@ -503,7 +507,7 @@ namespace luabind { namespace detail
             object_rep* obj = get_instance(L, index);
             if (obj == 0) return -1; // if the type is not one of our own registered types, classify it as a non-match
 
-            std::pair<void*, int> s = obj->get_instance<T>();
+            std::pair<detail::CastRefContainer, int> s = obj->get_instance<T>();
             if (s.second >= 0 && !obj->is_const())
                 s.second += 10;
             result = s.first;

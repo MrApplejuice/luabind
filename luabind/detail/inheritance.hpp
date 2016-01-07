@@ -5,6 +5,7 @@
 #ifndef LUABIND_INHERITANCE_090217_HPP
 # define LUABIND_INHERITANCE_090217_HPP
 
+# include <cstdio>
 # include <cassert>
 # include <limits>
 # include <map>
@@ -22,106 +23,138 @@ namespace luabind { namespace detail {
 class CastRefContainer
 {
 public:
-    class DestructorCallerBase {
+    class PointerManagerCallerBase {
         public:
-            virtual void destroy() {}
+            virtual PointerManagerCallerBase* clone() const = 0;
+            virtual void* get() = 0;
+            virtual ~PointerManagerCallerBase() {}
     };
 
     template <typename T>
-    class SpecificDestructorCaller {
+    class SpecificPointerManager : public PointerManagerCallerBase {
         public:
-            SpecificDestructorCaller(T* ptr) : ptr(ptr) {}
-            virtual void destroy() {
+            SpecificPointerManager(T* ptr) : ptr(ptr) {
+                assert(ptr);
+                printf("!! %lld created pointer %lld -- %s\n", (long long) this, (long long) ptr, typeid(T).name());
+            }
+
+            virtual PointerManagerCallerBase* clone() const {
+                T* nptr = new T;
+                *nptr = *ptr;
+                return new SpecificPointerManager<T>(nptr);
+            }
+
+            virtual void* get() { 
+                printf("!! %lld retrieving pointer %lld -- %s\n", (long long) this, (long long) ptr, typeid(T).name());
+                return ptr;
+            }
+            
+            virtual ~SpecificPointerManager() {
+                printf("!! %lld deleting pointer %lld -- %s\n", (long long) this, (long long) ptr, typeid(T).name());
                 if (ptr) {
-                    ptr->~T();
+                    delete ptr;
                     ptr = NULL;
                 }
             }
         private:
             T* ptr;
     };
+    
+/*    template <typename P>
+    class SpecificPointerManager< std::auto_ptr<P> > : public PointerManagerCallerBase {
+        public:
+            SpecificPointerManager(std::auto_ptr<P>* ptr) {
+                abort();
+            }
+            virtual PointerManagerCallerBase* clone() const { return NULL; }
+            virtual void* get() { return NULL; }
+    };
 
-    template <typename T, typename IsTrivialDestructor>
-    struct createDestructor_aux {
-        static DestructorCallerBase* apply(T* ptr) {
-            abort();
-        }
-    };
-    
-    /**
-     * Trivial destructor case...
-     */
-    template <typename T>
-    struct createDestructor_aux<T, boost::true_type> {
-        static DestructorCallerBase* apply(T* ptr) {
-            return new DestructorCallerBase();
-        }
-    };
-    
-    /**
-     * Callable destructor case
-     */
-    template <typename T>
-    struct createDestructor_aux<T, boost::false_type> {
-        static DestructorCallerBase* apply(T* ptr) {
-            return new SpecificDestructorCaller<T>(ptr);
-        }
-    };
-    
-    template <typename T>
-    static DestructorCallerBase* createDestructor(T* ptr) {
-        return createDestructor_aux<T, typename boost::has_trivial_destructor<T>::type>::apply(ptr);
-    }
-    
-    CastRefContainer() : data(NULL), destructor(NULL) {}
-    
-    CastRefContainer(CastRefContainer& other) : data(NULL), destructor(NULL) {
+    template <typename P>
+    class SpecificPointerManager< const std::auto_ptr<P> > : public SpecificPointerManager< std::auto_ptr<P> > {
+        public:
+            SpecificPointerManager(const std::auto_ptr<P>* ptr) : SpecificPointerManager< std::auto_ptr<P> >(NULL) {}
+    };*/
+
+    CastRefContainer() : pointerManager(NULL) {}
+    CastRefContainer(CastRefContainer& other) : pointerManager(NULL) {
         *this = other;
     }
-    
+    CastRefContainer(const CastRefContainer& other) : pointerManager(NULL) {
+        *this = other;
+    }
     template <typename T>
-    CastRefContainer(const T& ref) : 
-                  data(malloc(sizeof(T))), 
-                  destructor(NULL) {
-        T* dest_ptr = new(data) T();
-        destructor = createDestructor(dest_ptr);
-        *dest_ptr = ref;
+    CastRefContainer(const std::auto_ptr<T>& ref) : pointerManager(NULL) {
+        abort(); // Should never be called... this is invalid use
+    }
+/*    template <typename T>
+    CastRefContainer(T*& ptr) : pointerManager(NULL) {
+        printf("----------------- PTR thing %s\n", typeid(T*).name());
+        typedef T* TPtr;
+        
+        if (ptr != NULL) {
+            TPtr* dest_ptr = new TPtr;
+            *dest_ptr = ptr;
+            pointerManager = new SpecificPointerManager<TPtr>(dest_ptr);
+        }
+        printf("created pointer: %lld for %lld\n", (long long) pointerManager, (long long) this);
+    }*/
+    template <typename T>
+    CastRefContainer(const T& ref) : pointerManager(NULL) {
+        printf("----------------- REF thing %s\n", typeid(T*).name());
+        if (&ref != NULL) {
+            T* dest_ptr = new T;
+            *dest_ptr = ref;
+            pointerManager = new SpecificPointerManager<T>(dest_ptr);
+        }
+        printf("created pointer: %lld for %lld\n", (long long) pointerManager, (long long) this);
     }
 
     virtual ~CastRefContainer() {
         freeData();
     }
     
-    virtual void* get() {
-        return data;
+/*    CastRefContainer& operator=(CastRefContainer& other) {
+        if (this == &other) {
+            return *this;
+        }
+        
+        freeData();
+        pointerManager = other.pointerManager;
+        other.pointerManager = NULL;
+        printf("moved pointer: %lld into %lld from %lld\n", (long long) pointerManager, (long long) this, (long long) &other);
+        return *this;
+    }
+*/    
+    CastRefContainer& operator=(const CastRefContainer& other) {
+        if (this == &other) {
+            return *this;
+        }
+        
+        freeData();
+        pointerManager = other.pointerManager ? other.pointerManager->clone() : NULL;
+        printf("cloned pointer: %lld to %lld for %lld\n", (long long) other.pointerManager, (long long) pointerManager, (long long) this);
+        return *this;
     }
     
-    CastRefContainer& operator=(CastRefContainer& other) {
-        freeData();
-        
-        data = other.data;
-        destructor = other.destructor;
-        
-        other.data = NULL;
-        other.destructor = NULL;
-        
-        return *this;
+    virtual void* get() const {
+        printf("getting pointer: %lld\n", (long long) (pointerManager ? pointerManager->get() : NULL));
+        return pointerManager ? pointerManager->get() : NULL;
+    }
+    
+    operator bool() const {
+        return pointerManager != NULL;
     }
 private:
     void freeData() {
-        if (data) {
-            if (destructor) {
-                destructor->destroy();
-            }
-            free(data);
-        }
-        if (destructor) {
-            delete destructor;
+        if (pointerManager) {
+            printf("destroying %lld with pointer %lld\n", (long long) this, (long long) pointerManager);
+            delete pointerManager;
+            pointerManager = NULL;
         }
     }
 
-    void* data;
-    DestructorCallerBase* destructor;
+    PointerManagerCallerBase* pointerManager;
 };
 
 typedef CastRefContainer(*cast_function)(CastRefContainer);
@@ -141,7 +174,7 @@ public:
     // for a polymorphic type, the pointer must be cast with
     // dynamic_cast<void*> before being passed in here, and `src` has to
     // match typeid(*p).
-    std::pair<void*, int> cast(
+    std::pair<CastRefContainer, int> cast(
         void* p, class_id src, class_id target
       , class_id dynamic_id, void const* dynamic_ptr) const;
     void insert(class_id src, class_id target, cast_function cast);
@@ -275,12 +308,18 @@ struct registered_class<T const>
 
 enum ComplexPointerTypes {
     PT_UNKNOWN,
+    PT_AUTO_PTR,
     PT_BOOST_SHARED_PTR
 };
 
 template <typename T>
 struct pointer_type {
     static const ComplexPointerTypes type_id = PT_UNKNOWN;
+};
+
+template <typename T>
+struct pointer_type< std::auto_ptr<T> > {
+    static const ComplexPointerTypes type_id = PT_AUTO_PTR;
 };
 
 template <typename T>

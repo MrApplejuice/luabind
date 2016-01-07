@@ -54,7 +54,7 @@ namespace luabind { namespace detail
         void release_dependency_refs(lua_State* L);
 
         template <typename Target>
-        std::pair<void*, int> get_instance() const
+        std::pair<CastRefContainer, int> get_instance() const
         {
             return get_instance(registered_class<Target>::id);
         }
@@ -85,10 +85,11 @@ namespace luabind { namespace detail
         }
 
     private:
-        std::pair<void*, int> get_instance(class_id target) const
+        std::pair<CastRefContainer, int> get_instance(class_id target) const
         {
-            if (m_instance == 0)
-                return std::pair<void*, int>((void*)0, -1);
+            if (m_instance == 0) {
+                return std::pair<CastRefContainer, int>(CastRefContainer(), -1);
+            }
             return m_instance->get(m_classrep->casts(), target);
         }
 
