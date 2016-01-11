@@ -155,15 +155,14 @@ std::pair<CastRefContainer, int> cast_graph::impl::cast(
 
     cache_entry cached = m_cache.get(src, target, dynamic_id, object_offset);
 
-    /*if (cached.first != cache::unknown)
+    if (cached.first != cache::unknown)
     {
         if (cached.first == cache::invalid)
             return std::pair<CastRefContainer, int>(CastRefContainer(), -1);
         return std::make_pair(CastRefContainer((char*)p + cached.first), cached.second);
-    }*/
+    }
 
     std::queue<queue_entry> q;
-    printf("Pushing first queue value\n");
     q.push(queue_entry(CastRefContainer(p), src, 0));
 
     boost::dynamic_bitset<> visited(m_vertices.size());
@@ -178,10 +177,10 @@ std::pair<CastRefContainer, int> cast_graph::impl::cast(
 
         if (v.id == target)
         {
-            //m_cache.put(
-            //    src, target, dynamic_id, object_offset
-            //  , (char*)qe.p.get() - (char*)p, qe.distance
-            //);
+            m_cache.put(
+                src, target, dynamic_id, object_offset
+              , *(char**)qe.p.get() - (char*)p, qe.distance
+            );
 
             return std::make_pair(CastRefContainer(qe.p), qe.distance);
         }
