@@ -20,6 +20,7 @@
 
 namespace luabind { namespace detail {
 
+//#define DETAILED_CastRefContainer_OUTPUT
 class CastRefContainer
 {
 public:
@@ -35,7 +36,9 @@ public:
         public:
             SpecificPointerManager(T* ptr) : ptr(ptr) {
                 assert(ptr);
+#ifdef DETAILED_CastRefContainer_OUTPUT
                 printf("!! %lld created pointer %lld -- %s\n", (long long) this, (long long) ptr, typeid(T).name());
+#endif
             }
 
             virtual PointerManagerCallerBase* clone() const {
@@ -44,12 +47,16 @@ public:
             }
 
             virtual void* get() { 
+#ifdef DETAILED_CastRefContainer_OUTPUT
                 printf("!! %lld retrieving pointer %lld -- %s\n", (long long) this, (long long) ptr, typeid(T).name());
+#endif
                 return ptr;
             }
             
             virtual ~SpecificPointerManager() {
+#ifdef DETAILED_CastRefContainer_OUTPUT
                 printf("!! %lld deleting pointer %lld -- %s\n", (long long) this, (long long) ptr, typeid(T).name());
+#endif
                 if (ptr) {
                     delete ptr;
                     ptr = NULL;
@@ -100,12 +107,13 @@ public:
     }*/
     template <typename T>
     CastRefContainer(const T& ref) : pointerManager(NULL) {
-        printf("----------------- REF thing %s\n", typeid(T*).name());
         if (&ref != NULL) {
             T* dest_ptr = new T(ref);
             pointerManager = new SpecificPointerManager<T>(dest_ptr);
         }
+#ifdef DETAILED_CastRefContainer_OUTPUT
         printf("created pointer: %lld for %lld\n", (long long) pointerManager, (long long) this);
+#endif
     }
 
     virtual ~CastRefContainer() {
@@ -131,13 +139,17 @@ public:
         
         freeData();
         pointerManager = other.pointerManager ? other.pointerManager->clone() : NULL;
+#ifdef DETAILED_CastRefContainer_OUTPUT
         printf("cloned pointer: %lld to %lld for %lld\n", (long long) other.pointerManager, (long long) pointerManager, (long long) this);
+#endif
         return *this;
     }
     
     virtual void* get() const {
         void* result = pointerManager ? pointerManager->get() : NULL;
+#ifdef DETAILED_CastRefContainer_OUTPUT
         printf("getting pointer: %lld\n", (long long) result);
+#endif
         return result;
     }
     
@@ -147,7 +159,9 @@ public:
 private:
     void freeData() {
         if (pointerManager) {
+#ifdef DETAILED_CastRefContainer_OUTPUT
             printf("destroying %lld with pointer %lld\n", (long long) this, (long long) pointerManager);
+#endif
             delete pointerManager;
             pointerManager = NULL;
         }
