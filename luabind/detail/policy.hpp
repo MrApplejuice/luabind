@@ -252,7 +252,7 @@ namespace luabind { namespace detail
             printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
 #endif
             assert(result);
-            return static_cast<T*>(result.get());
+            return *static_cast<T**>(result.get());
         }
 
         template<class T>
@@ -315,7 +315,7 @@ namespace luabind { namespace detail
 #endif
 
             assert(result);
-            return *static_cast<T*>(result.get());
+            return **static_cast<T**>(result.get());
         }
 
         template<class T>
@@ -383,7 +383,7 @@ namespace luabind { namespace detail
 #endif
 
             assert(result);
-            return static_cast<T const*>(result.get());
+            return *static_cast<T const**>(result.get());
         }
 
         template<class T>
@@ -498,7 +498,7 @@ namespace luabind { namespace detail
 #endif
 
             assert(result);
-            return *static_cast<T*>(result.get());
+            return **static_cast<T**>(result.get());
         }
 
         template<class T>

@@ -39,8 +39,7 @@ public:
             }
 
             virtual PointerManagerCallerBase* clone() const {
-                T* nptr = new T;
-                *nptr = *ptr;
+                T* nptr = new T(*ptr);
                 return new SpecificPointerManager<T>(nptr);
             }
 
@@ -103,8 +102,7 @@ public:
     CastRefContainer(const T& ref) : pointerManager(NULL) {
         printf("----------------- REF thing %s\n", typeid(T*).name());
         if (&ref != NULL) {
-            T* dest_ptr = new T;
-            *dest_ptr = ref;
+            T* dest_ptr = new T(ref);
             pointerManager = new SpecificPointerManager<T>(dest_ptr);
         }
         printf("created pointer: %lld for %lld\n", (long long) pointerManager, (long long) this);
@@ -138,8 +136,9 @@ public:
     }
     
     virtual void* get() const {
-        printf("getting pointer: %lld\n", (long long) (pointerManager ? pointerManager->get() : NULL));
-        return pointerManager ? pointerManager->get() : NULL;
+        void* result = pointerManager ? pointerManager->get() : NULL;
+        printf("getting pointer: %lld\n", (long long) result);
+        return result;
     }
     
     operator bool() const {
@@ -275,7 +274,7 @@ struct static_cast_
 {
     static CastRefContainer execute(CastRefContainer p)
     {
-        return CastRefContainer(static_cast<T*>(static_cast<S*>(p.get())));
+        return CastRefContainer(static_cast<T*>(*static_cast<S**>(p.get())));
     }
 };
 
@@ -284,7 +283,7 @@ struct dynamic_cast_
 {
     static CastRefContainer execute(CastRefContainer p)
     {
-        return CastRefContainer(dynamic_cast<T*>(static_cast<S*>(p.get())));
+        return CastRefContainer(dynamic_cast<T*>(*static_cast<S**>(p.get())));
     }
 };
 
