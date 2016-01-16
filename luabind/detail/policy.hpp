@@ -229,7 +229,7 @@ namespace luabind { namespace detail
         void apply(lua_State* L, T* ptr)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting to lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
             
             if (ptr == 0) 
@@ -249,7 +249,7 @@ namespace luabind { namespace detail
         T* apply(lua_State*, by_pointer<T>, int)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting from lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
             assert(result);
             return *static_cast<T**>(result.get());
@@ -297,7 +297,7 @@ namespace luabind { namespace detail
         void apply(lua_State* L, T x)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting to lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
 
             if (luabind::get_back_reference(L, x))
@@ -311,7 +311,7 @@ namespace luabind { namespace detail
         T apply(lua_State*, by_value<T>, int)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting from lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
 
             assert(result);
@@ -359,7 +359,7 @@ namespace luabind { namespace detail
         void apply(lua_State* L, const T* ptr)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting to lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
 
             if (ptr == 0) 
@@ -379,7 +379,7 @@ namespace luabind { namespace detail
         T const* apply(lua_State*, by_const_pointer<T>, int)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting from lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
 
             assert(result);
@@ -419,7 +419,7 @@ namespace luabind { namespace detail
         void apply(lua_State* L, T& ref)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting to lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
 
             if (luabind::get_back_reference(L, ref))
@@ -433,7 +433,7 @@ namespace luabind { namespace detail
         T& apply(lua_State* L, by_reference<T>, int index)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting from lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
 
             assert(!lua_isnil(L, index));
@@ -480,7 +480,7 @@ namespace luabind { namespace detail
         void apply(lua_State* L, T const& ref)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting to lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting to lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
 
             if (luabind::get_back_reference(L, ref))
@@ -494,7 +494,7 @@ namespace luabind { namespace detail
         T const& apply(lua_State*, by_const_reference<T>, int)
         {
 #ifdef LUABIND_SHOW_CONVERTER
-            printf("converting from lua: %s %s\n", typeid(*this).name(), __FUNCTION__);
+            printf("converting from lua: %s %s    type: %s\n", typeid(*this).name(), __FUNCTION__, typeid(T).name());
 #endif
 
             assert(result);
