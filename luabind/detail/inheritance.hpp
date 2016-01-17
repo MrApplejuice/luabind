@@ -112,7 +112,7 @@ public:
             pointerManager = new SpecificPointerManager<T>(dest_ptr);
         }
 #ifdef DETAILED_CastRefContainer_OUTPUT
-        printf("created pointer: %lld for %lld\n", (long long) pointerManager, (long long) this);
+        printf("created pointer: %lld for %lld with type %s\n", (long long) pointerManager, (long long) this, typeid(T).name());
 #endif
     }
 
@@ -288,7 +288,13 @@ struct static_cast_
 {
     static CastRefContainer execute(CastRefContainer p)
     {
+#ifdef DETAILED_CastRefContainer_OUTPUT
+        S* s = *static_cast<S**>(p.get());
+        printf("!! temp static_cast_<%s, %s>: %lld\n", typeid(S).name(), typeid(T).name(), (long long) s);
+        return CastRefContainer(static_cast<T*>(s));
+#else
         return CastRefContainer(static_cast<T*>(*static_cast<S**>(p.get())));
+#endif
     }
 };
 
@@ -297,7 +303,13 @@ struct dynamic_cast_
 {
     static CastRefContainer execute(CastRefContainer p)
     {
+#ifdef DETAILED_CastRefContainer_OUTPUT
+        S* s = *static_cast<S**>(p.get());
+        printf("!! temp dynamic_cast_<%s, %s>: %lld\n", typeid(S).name(), typeid(T).name(), (long long) s);
+        return CastRefContainer(dynamic_cast<T*>(s));
+#else
         return CastRefContainer(dynamic_cast<T*>(*static_cast<S**>(p.get())));
+#endif
     }
 };
 
@@ -328,16 +340,46 @@ enum ComplexPointerTypes {
 template <typename T>
 struct pointer_type {
     static const ComplexPointerTypes type_id = PT_UNKNOWN;
+    
+    static T cast_to(const CastRefContainer& x) {
+        abort();
+    }
+    
+    static CastRefContainer cast_from(const T& x) {
+        abort();
+    }
 };
 
 template <typename T>
 struct pointer_type< std::auto_ptr<T> > {
     static const ComplexPointerTypes type_id = PT_AUTO_PTR;
+    
+    static std::auto_ptr<T> cast_to(const CastRefContainer& x) {
+        abort(); // Really this should not work!
+        return std::auto_ptr<T>();
+    }
+    
+    static void* cast_from(std::auto_ptr<T>& x) {
+        abort(); // Really this should not work!
+        return NULL;
+    }
 };
 
 template <typename T>
 struct pointer_type< boost::shared_ptr<T> > {
     static const ComplexPointerTypes type_id = PT_BOOST_SHARED_PTR;
+
+    static T cast_to(const CastRefContainer& x) {
+        abort(); // Really this should not work!
+        return boost::shared_ptr<T>(static_cast<T*>(x));
+    }
+    
+    static CastRefContainer cast_from(boost::shared_ptr<T>& x) {
+        abort(); // Really this should not work!
+        void* result = x.get();
+        x.release();
+        return result;
+    }
 };
 
 struct PointerDescriptor {
