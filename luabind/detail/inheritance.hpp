@@ -34,36 +34,31 @@ public:
     template <typename T>
     class SpecificPointerManager : public PointerManagerCallerBase {
         public:
-            SpecificPointerManager(T* ptr) : ptr(ptr) {
-                assert(ptr);
+            SpecificPointerManager(const T& ref) : data(ref) {
+                assert(&ref);
 #ifdef DETAILED_CastRefContainer_OUTPUT
-                printf("!! %lld created pointer %lld -- %s\n", (long long) this, (long long) ptr, typeid(T).name());
+                printf("!! %lld created pointer %lld -- %s\n", (long long) this, (long long) &data, typeid(T).name());
 #endif
             }
 
             virtual PointerManagerCallerBase* clone() const {
-                T* nptr = new T(*ptr);
-                return new SpecificPointerManager<T>(nptr);
+                return new SpecificPointerManager<T>(data);
             }
 
             virtual void* get() { 
 #ifdef DETAILED_CastRefContainer_OUTPUT
-                printf("!! %lld retrieving pointer %lld -- %s\n", (long long) this, (long long) ptr, typeid(T).name());
+                printf("!! %lld retrieving pointer %lld -- %s\n", (long long) this, (long long) &data, typeid(T).name());
 #endif
-                return ptr;
+                return &data;
             }
             
             virtual ~SpecificPointerManager() {
 #ifdef DETAILED_CastRefContainer_OUTPUT
-                printf("!! %lld deleting pointer %lld -- %s\n", (long long) this, (long long) ptr, typeid(T).name());
+                printf("!! %lld deleting pointer %lld -- %s\n", (long long) this, (long long) &data, typeid(T).name());
 #endif
-                if (ptr) {
-                    delete ptr;
-                    ptr = NULL;
-                }
             }
         private:
-            T* ptr;
+            T data;;
     };
     
 /*    template <typename P>
@@ -106,10 +101,9 @@ public:
         printf("created pointer: %lld for %lld\n", (long long) pointerManager, (long long) this);
     }*/
     template <typename T>
-    CastRefContainer(const T& ref) : pointerManager(NULL) {
+    CastRefContainer(const T& ref, bool savePointer=false) : pointerManager(NULL) {
         if (&ref != NULL) {
-            T* dest_ptr = new T(ref);
-            pointerManager = new SpecificPointerManager<T>(dest_ptr);
+            pointerManager = new SpecificPointerManager<T>(ref);
         }
 #ifdef DETAILED_CastRefContainer_OUTPUT
         printf("created pointer: %lld for %lld with type %s\n", (long long) pointerManager, (long long) this, typeid(T).name());
