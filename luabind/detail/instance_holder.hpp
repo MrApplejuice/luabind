@@ -85,7 +85,7 @@ public:
     std::pair<CastRefContainer, int> get(cast_graph const& casts, class_id target) const
     {
         if (target == registered_class<P>::id)
-            return std::pair<CastRefContainer, int>(CastRefContainer(this->p), 0);
+            return std::pair<CastRefContainer, int>(CastRefContainer(&this->p), 0);
             
         void* naked_ptr = const_cast<void*>(static_cast<void const*>(
             weak ? weak : get_pointer(p)));
