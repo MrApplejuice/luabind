@@ -85,7 +85,7 @@ public:
     std::pair<CastRefContainer, int> get(cast_graph const& casts, class_id target) const
     {
         if (target == registered_class<P>::id)
-            return std::pair<CastRefContainer, int>(CastRefContainer(&this->p), 0);
+            return std::pair<CastRefContainer, int>(&this->p, 0);
             
         void* naked_ptr = const_cast<void*>(static_cast<void const*>(
             weak ? weak : get_pointer(p)));
@@ -99,10 +99,13 @@ public:
             if (get_pointed_types(target, pointerDesc)) {
                 for (std::vector<PointerDescriptor>::iterator it = pointerDesc.begin(); it != pointerDesc.end(); it++) {
                     if (it->pointer_type == pointer_type<P>::type_id) {
-                        std::pair<CastRefContainer, int> castable_check = casts.cast(naked_ptr, static_class_id(false ? get_pointer(p) : 0), it->target_id, dynamic_id, dynamic_ptr);
+                        std::pair<CastRefContainer, int> castable_check = casts.cast(naked_ptr, 
+                                                                                     static_class_id(false ? get_pointer(p) : 0), 
+                                                                                     it->target_id, 
+                                                                                     dynamic_id, 
+                                                                                     dynamic_ptr);
                         if (castable_check.second >= 0) {
-                            printf("Found possible cast!!!\n");
-                            break;
+                            return std::make_pair(it->cast_to(pointer_type<P>::cast_from(&this->p)), castable_check.second);
                         }
                     }
                 }

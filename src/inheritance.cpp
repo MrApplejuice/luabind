@@ -342,9 +342,13 @@ bool get_pointed_types(class_id pointer, std::vector<PointerDescriptor>& target)
   return true;
 }
 
-void register_registered_class_pointer_relation(class_id pointer, ComplexPointerTypes pointer_type, class_id target) {
+void register_registered_class_pointer_relation(class_id pointer, 
+                                                ComplexPointerTypes pointer_type, 
+                                                class_id target, 
+                                                PointerDescriptor::CastFunc cast_to_func, 
+                                                PointerDescriptor::CastFunc cast_from_func) {
   WeakReentrantLock::Lock lock(registered_class_pointer_relations_lock, true);
-  registered_class_pointer_relations[pointer].push_back(PointerDescriptor(pointer_type, target));
+  registered_class_pointer_relations[pointer].push_back(PointerDescriptor(pointer_type, target, cast_to_func, cast_from_func));
 }
 
 }} // namespace luabind::detail

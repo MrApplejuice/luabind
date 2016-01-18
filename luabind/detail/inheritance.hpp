@@ -32,9 +32,9 @@ public:
     };
 
     template <typename T>
-    class SpecificPointerManager : public PointerManagerCallerBase {
+    class IntrusivePointerManager : public PointerManagerCallerBase {
         public:
-            SpecificPointerManager(const T& ref) : data(ref) {
+            IntrusivePointerManager(const T& ref) : data(ref) {
                 assert(&ref);
 #ifdef DETAILED_CastRefContainer_OUTPUT
                 printf("!! %lld created pointer %lld -- %s\n", (long long) this, (long long) &data, typeid(T).name());
@@ -42,7 +42,7 @@ public:
             }
 
             virtual PointerManagerCallerBase* clone() const {
-                return new SpecificPointerManager<T>(data);
+                return new IntrusivePointerManager<T>(data);
             }
 
             virtual void* get() { 
@@ -52,7 +52,7 @@ public:
                 return &data;
             }
             
-            virtual ~SpecificPointerManager() {
+            virtual ~IntrusivePointerManager() {
 #ifdef DETAILED_CastRefContainer_OUTPUT
                 printf("!! %lld deleting pointer %lld -- %s\n", (long long) this, (long long) &data, typeid(T).name());
 #endif
@@ -61,10 +61,42 @@ public:
             T data;;
     };
     
-/*    template <typename P>
-    class SpecificPointerManager< std::auto_ptr<P> > : public PointerManagerCallerBase {
+    template <typename T>
+    class OwnedPointerManager : public PointerManagerCallerBase {
         public:
-            SpecificPointerManager(std::auto_ptr<P>* ptr) {
+            OwnedPointerManager(const T& ref) : ownedData(ref), pointerToOwnedData(&ownedData) {
+                assert(&ref);
+                assert(ref);
+#ifdef DETAILED_CastRefContainer_OUTPUT
+                printf("!! %lld created pointer %lld -- %s\n", (long long) this, (long long) &data, typeid(T).name());
+#endif
+            }
+
+            virtual PointerManagerCallerBase* clone() const {
+                return new OwnedPointerManager<T>(ownedData);
+            }
+
+            virtual void* get() { 
+#ifdef DETAILED_CastRefContainer_OUTPUT
+                printf("!! %lld retrieving pointer %lld -- %s\n", (long long) this, (long long) &data, typeid(T).name());
+#endif
+                return &pointerToOwnedData;
+            }
+            
+            virtual ~OwnedPointerManager() {
+#ifdef DETAILED_CastRefContainer_OUTPUT
+                printf("!! %lld deleting pointer %lld -- %s\n", (long long) this, (long long) &data, typeid(T).name());
+#endif
+            }
+        private:
+            T ownedData;
+            T* pointerToOwnedData;
+    };
+    
+/*    template <typename P>
+    class IntrusivePointerManager< std::auto_ptr<P> > : public PointerManagerCallerBase {
+        public:
+            IntrusivePointerManager(std::auto_ptr<P>* ptr) {
                 abort();
             }
             virtual PointerManagerCallerBase* clone() const { return NULL; }
@@ -72,9 +104,9 @@ public:
     };
 
     template <typename P>
-    class SpecificPointerManager< const std::auto_ptr<P> > : public SpecificPointerManager< std::auto_ptr<P> > {
+    class IntrusivePointerManager< const std::auto_ptr<P> > : public IntrusivePointerManager< std::auto_ptr<P> > {
         public:
-            SpecificPointerManager(const std::auto_ptr<P>* ptr) : SpecificPointerManager< std::auto_ptr<P> >(NULL) {}
+            IntrusivePointerManager(const std::auto_ptr<P>* ptr) : IntrusivePointerManager< std::auto_ptr<P> >(NULL) {}
     };*/
 
     CastRefContainer() : pointerManager(NULL) {}
@@ -96,15 +128,29 @@ public:
         if (ptr != NULL) {
             TPtr* dest_ptr = new TPtr;
             *dest_ptr = ptr;
-            pointerManager = new SpecificPointerManager<TPtr>(dest_ptr);
+            pointerManager = new IntrusivePointerManager<TPtr>(dest_ptr);
         }
         printf("created pointer: %lld for %lld\n", (long long) pointerManager, (long long) this);
     }*/
     template <typename T>
-    CastRefContainer(const T& ref, bool savePointer=false) : pointerManager(NULL) {
+    CastRefContainer(const T& ref) : pointerManager(NULL) {
         if (&ref != NULL) {
-            pointerManager = new SpecificPointerManager<T>(ref);
-        }
+            pointerManager = new IntrusivePointerManager<T>(ref);
+         }
+#ifdef DETAILED_CastRefContainer_OUTPUT
+        printf("created pointer: %lld for %lld with type %s\n", (long long) pointerManager, (long long) this, typeid(T).name());
+#endif
+    }
+
+    template <typename T>
+    CastRefContainer(const T& ref, bool wrapInPointer) : pointerManager(NULL) {
+        if (&ref != NULL) {
+            if (!wrapInPointer) {
+                pointerManager = new IntrusivePointerManager<T>(ref);
+            } else {
+                pointerManager = new OwnedPointerManager<T>(ref);
+            }
+         }
 #ifdef DETAILED_CastRefContainer_OUTPUT
         printf("created pointer: %lld for %lld with type %s\n", (long long) pointerManager, (long long) this, typeid(T).name());
 #endif
@@ -334,12 +380,13 @@ enum ComplexPointerTypes {
 template <typename T>
 struct pointer_type {
     static const ComplexPointerTypes type_id = PT_UNKNOWN;
+    static const class_id target_id = -1;
     
-    static T cast_to(const CastRefContainer& x) {
+    static CastRefContainer cast_to(const CastRefContainer& x) {
         abort();
     }
     
-    static CastRefContainer cast_from(const T& x) {
+    static CastRefContainer cast_from(const CastRefContainer& x) {
         abort();
     }
 };
@@ -347,45 +394,49 @@ struct pointer_type {
 template <typename T>
 struct pointer_type< std::auto_ptr<T> > {
     static const ComplexPointerTypes type_id = PT_AUTO_PTR;
+    static const class_id target_id = registered_class<T>::id;
     
-    static std::auto_ptr<T> cast_to(const CastRefContainer& x) {
+    static CastRefContainer cast_to(const CastRefContainer& x) {
         abort(); // Really this should not work!
-        return std::auto_ptr<T>();
+        return CastRefContainer();
     }
     
-    static void* cast_from(std::auto_ptr<T>& x) {
+    static CastRefContainer cast_from(const CastRefContainer& x) {
         abort(); // Really this should not work!
-        return NULL;
+        return CastRefContainer();
     }
 };
 
 template <typename T>
 struct pointer_type< boost::shared_ptr<T> > {
     static const ComplexPointerTypes type_id = PT_BOOST_SHARED_PTR;
+    static const class_id target_id = registered_class<T>::id;
 
-    static T cast_to(const CastRefContainer& x) {
-        abort(); // Really this should not work!
-        return boost::shared_ptr<T>(static_cast<T*>(x));
+    static CastRefContainer cast_to(const CastRefContainer& x) {
+        return CastRefContainer(boost::static_pointer_cast<T>(**static_cast<boost::shared_ptr<void>**>(x.get())), true);
     }
     
-    static CastRefContainer cast_from(boost::shared_ptr<T>& x) {
-        abort(); // Really this should not work!
-        void* result = x.get();
-        x.release();
-        return result;
+    static CastRefContainer cast_from(const CastRefContainer& x) {
+        return CastRefContainer(boost::static_pointer_cast<void>(**static_cast<boost::shared_ptr<T>**>(x.get())), true);
     }
 };
 
 struct PointerDescriptor {
+    typedef CastRefContainer(*CastFunc)(const CastRefContainer& x);
+    
     ComplexPointerTypes pointer_type;
     class_id target_id;
+    
+    CastFunc cast_from, cast_to;
     
     PointerDescriptor(const PointerDescriptor& other) {
         *this = other;
     }
-    PointerDescriptor(ComplexPointerTypes pointer_type, class_id target_id) :
+    PointerDescriptor(ComplexPointerTypes pointer_type, class_id target_id, CastFunc cast_from, CastFunc cast_to) :
       pointer_type(pointer_type),
-      target_id(target_id) {}
+      target_id(target_id),
+      cast_from(cast_from),
+      cast_to(cast_to) {}
 };
 
 /**
@@ -397,15 +448,23 @@ bool get_pointed_types(class_id pointer, std::vector<PointerDescriptor>& target)
 /**
  * Registeres a new class relation between a pointer class_id and a target class_id.
  */
-void register_registered_class_pointer_relation(class_id pointer, ComplexPointerTypes pointer_type, class_id target);
+void register_registered_class_pointer_relation(class_id pointer, 
+                                                ComplexPointerTypes pointer_type, 
+                                                class_id target, 
+                                                PointerDescriptor::CastFunc cast_to_func, 
+                                                PointerDescriptor::CastFunc cast_from_func);
 
 /**
  * Registeres a new class relation between a pointer class_id and a target class_id, inferring all parameters
  * from the template arguments.
  */
 template <typename T>
-void register_registered_class_pointer_relation(class_id target) {
-    register_registered_class_pointer_relation(registered_class<T>::id, pointer_type<T>::type_id, target);
+static void register_registered_class_pointer_relation(class_id target) {
+    register_registered_class_pointer_relation(registered_class<T>::id, 
+                                               pointer_type<T>::type_id, 
+                                               target,
+                                               &pointer_type<T>::cast_to,
+                                               &pointer_type<T>::cast_from);
 }
 
 
