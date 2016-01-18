@@ -93,22 +93,6 @@ public:
             T* pointerToOwnedData;
     };
     
-/*    template <typename P>
-    class IntrusivePointerManager< std::auto_ptr<P> > : public PointerManagerCallerBase {
-        public:
-            IntrusivePointerManager(std::auto_ptr<P>* ptr) {
-                abort();
-            }
-            virtual PointerManagerCallerBase* clone() const { return NULL; }
-            virtual void* get() { return NULL; }
-    };
-
-    template <typename P>
-    class IntrusivePointerManager< const std::auto_ptr<P> > : public IntrusivePointerManager< std::auto_ptr<P> > {
-        public:
-            IntrusivePointerManager(const std::auto_ptr<P>* ptr) : IntrusivePointerManager< std::auto_ptr<P> >(NULL) {}
-    };*/
-
     CastRefContainer() : pointerManager(NULL) {}
     CastRefContainer(CastRefContainer& other) : pointerManager(NULL) {
         *this = other;
@@ -120,18 +104,6 @@ public:
     CastRefContainer(const std::auto_ptr<T>& ref) : pointerManager(NULL) {
         abort(); // Should never be called... this is invalid use
     }
-/*    template <typename T>
-    CastRefContainer(T*& ptr) : pointerManager(NULL) {
-        printf("----------------- PTR thing %s\n", typeid(T*).name());
-        typedef T* TPtr;
-        
-        if (ptr != NULL) {
-            TPtr* dest_ptr = new TPtr;
-            *dest_ptr = ptr;
-            pointerManager = new IntrusivePointerManager<TPtr>(dest_ptr);
-        }
-        printf("created pointer: %lld for %lld\n", (long long) pointerManager, (long long) this);
-    }*/
     template <typename T>
     CastRefContainer(const T& ref) : pointerManager(NULL) {
         if (&ref != NULL) {
@@ -160,18 +132,6 @@ public:
         freeData();
     }
     
-/*    CastRefContainer& operator=(CastRefContainer& other) {
-        if (this == &other) {
-            return *this;
-        }
-        
-        freeData();
-        pointerManager = other.pointerManager;
-        other.pointerManager = NULL;
-        printf("moved pointer: %lld into %lld from %lld\n", (long long) pointerManager, (long long) this, (long long) &other);
-        return *this;
-    }
-*/    
     CastRefContainer& operator=(const CastRefContainer& other) {
         if (this == &other) {
             return *this;
