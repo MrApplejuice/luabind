@@ -315,7 +315,7 @@ namespace luabind { namespace detail
 #endif
 
             assert(result);
-            return *static_cast<T*>(result.get());
+            return **static_cast<T**>(result.get());
         }
 
         template<class T>
