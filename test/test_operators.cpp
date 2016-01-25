@@ -53,12 +53,17 @@ struct operator_tester : counted_type<operator_tester>
 	}
 };
 
-float operator*(operator_tester const& lhs, operator_tester const& rhs)
+float operator*(operator_tester const& /*lhs*/, operator_tester const& /*rhs*/)
 {
 	return 35.f;
 }
 
-std::string operator*(operator_tester const&, int v)
+float operator%(operator_tester const& /*lhs*/, operator_tester const& /*rhs*/)
+{
+	return 15.f;
+}
+
+std::string operator*(operator_tester const&, int /*v*/)
 {
 	return "(operator_tester, int) overload";
 }
@@ -86,12 +91,12 @@ std::ostream& operator<<(std::ostream& os, const operator_tester&)
 
 struct op_test1
 {
-	bool operator==(op_test1 const& rhs) const { return true; } 
+	bool operator==(op_test1 const& /*rhs*/) const { return true; }
 };
 
 struct op_test2 : public op_test1
 {
-	bool operator==(op_test2 const& rhs) const { return true; } 
+	bool operator==(op_test2 const& /*rhs*/) const { return true; }
 };
 
 COUNTER_GUARD(operator_tester);
@@ -130,8 +135,10 @@ void test_main(lua_State* L)
 			.def(self(int()))
 //			.def(const_self * other<operator_tester const&>())
 			.def(const_self * const_self)
-			.def(const_self * other<int>()),
+			.def(const_self * other<int>())
+			.def(const_self % const_self)
 //			.def("clone", &clone, adopt(return_value)),
+		,
 
 		class_<operator_tester2>("operator_tester2")
 			.def(constructor<>())
@@ -157,6 +164,8 @@ void test_main(lua_State* L)
 	DOSTRING(L, "test2 = operator_tester2()");
 	DOSTRING(L, "test3 = operator_tester3()");
 
+	DOSTRING(L, "assert(test == test)");
+	
 	DOSTRING(L, "assert(tostring(test) == 'operator_tester')");
 	
 	DOSTRING(L, "assert(test() == 3.5)");
@@ -164,6 +173,7 @@ void test_main(lua_State* L)
 
 	DOSTRING(L, "assert(-test == 46)");
 	DOSTRING(L, "assert(test * test == 35)");
+	DOSTRING(L, "assert(test % test == 15)");
 	DOSTRING(L, "assert(test * 3 == '(operator_tester, int) overload')")
 	DOSTRING(L, "assert(test + test2 == 73)");
 	DOSTRING(L, "assert(2 + test == 2 + 2)");

@@ -25,7 +25,6 @@
 #include <luabind/lua_include.hpp>
 
 #include <luabind/detail/stack_utils.hpp>
-#include <luabind/detail/conversion_storage.hpp>
 #include <luabind/luabind.hpp>
 #include <luabind/exception_handler.hpp>
 #include <luabind/get_main_thread.hpp>
@@ -56,6 +55,11 @@ luabind::detail::class_rep::class_rep(type_id const& type
 	, m_class_type(cpp_class)
 	, m_operator_cache(0)
 {
+	shared_init(L);
+}
+
+
+void luabind::detail::class_rep::shared_init(lua_State * L) {
 	lua_newtable(L);
 	handle(L, -1).swap(m_table);
 	lua_newtable(L);
@@ -63,15 +67,16 @@ luabind::detail::class_rep::class_rep(type_id const& type
 	lua_pop(L, 2);
 
 	class_registry* r = class_registry::get_registry(L);
+	// the following line should be equivalent whether or not this is a cpp class
 	assert((r->cpp_class() != LUA_NOREF) && "you must call luabind::open()");
 
-	lua_rawgeti(L, LUA_REGISTRYINDEX, r->cpp_class());
+	lua_rawgeti(L, LUA_REGISTRYINDEX, (m_class_type == cpp_class) ? r->cpp_class() : r->lua_class());
 	lua_setmetatable(L, -2);
 
 	lua_pushvalue(L, -1); // duplicate our user data
 	m_self_ref.set(L);
 
-	m_instance_metatable = r->cpp_instance();
+	m_instance_metatable = (m_class_type == cpp_class) ? r->cpp_instance() : r->lua_instance();
 
     lua_pushstring(L, "__luabind_cast_graph");
     lua_gettable(L, LUA_REGISTRYINDEX);
@@ -82,6 +87,7 @@ luabind::detail::class_rep::class_rep(type_id const& type
     lua_gettable(L, LUA_REGISTRYINDEX);
     m_classes = static_cast<class_id_map*>(lua_touserdata(L, -1));
     lua_pop(L, 1);
+
 }
 
 luabind::detail::class_rep::class_rep(lua_State* L, const char* name)
@@ -90,31 +96,7 @@ luabind::detail::class_rep::class_rep(lua_State* L, const char* name)
 	, m_class_type(lua_class)
 	, m_operator_cache(0)
 {
-	lua_newtable(L);
-	handle(L, -1).swap(m_table);
-	lua_newtable(L);
-	handle(L, -1).swap(m_default_table);
-	lua_pop(L, 2);
-
-	class_registry* r = class_registry::get_registry(L);
-	assert((r->cpp_class() != LUA_NOREF) && "you must call luabind::open()");
-
-	lua_rawgeti(L, LUA_REGISTRYINDEX, r->lua_class());
-	lua_setmetatable(L, -2);
-	lua_pushvalue(L, -1); // duplicate our user data
-	m_self_ref.set(L);
-
-	m_instance_metatable = r->lua_instance();
-
-    lua_pushstring(L, "__luabind_cast_graph");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    m_casts = static_cast<cast_graph*>(lua_touserdata(L, -1));
-    lua_pop(L, 1);
-
-    lua_pushstring(L, "__luabind_class_id_map");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    m_classes = static_cast<class_id_map*>(lua_touserdata(L, -1));
-    lua_pop(L, 1);
+	shared_init(L);
 }
 
 luabind::detail::class_rep::~class_rep()
@@ -307,14 +289,7 @@ int luabind::detail::class_rep::static_class_gettable(lua_State* L)
 
 #ifndef LUABIND_NO_ERROR_CHECKING
 
-	{
-		std::string msg = "no static '";
-		msg += key;
-		msg += "' in class '";
-		msg += crep->name();
-		msg += "'";
-		lua_pushstring(L, msg.c_str());
-	}
+	lua_pushfstring(L, "no static '%s' in class '%s'", key, crep->name());
 	lua_error(L);
 
 #endif
@@ -348,7 +323,7 @@ void luabind::detail::finalize(lua_State* L, class_rep* crep)
 	crep->get_table(L);
     lua_pushliteral(L, "__finalize");
 	lua_gettable(L, -2);
-	lua_remove(L, -2);
+	lua_remove(L, lua_gettop(L) + 1 - 2);
 
 	if (lua_isnil(L, -1))
 	{

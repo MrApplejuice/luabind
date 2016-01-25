@@ -25,7 +25,7 @@
 
 #include <luabind/config.hpp>
 
-struct lua_State;
+#include <luabind/lua_state_fwd.hpp>
 
 namespace luabind {
 
@@ -41,13 +41,14 @@ namespace luabind {
 
         void swap(weak_ref&);
 
-		// returns a unique id that no
-		// other weak ref will return
-		int id() const;
+        // returns a unique id that no
+        // other weak ref will return
+        int id() const;
 
         lua_State* state() const;
         void get(lua_State* L) const;
 
+        bool is_weakref_valid() const;
     private:
         struct impl;
         impl* m_impl;

@@ -86,7 +86,11 @@ else if [ os.name ] in LINUX MACOSX FREEBSD
     local names = liblua5.2 liblua52 liblua ;
     local extensions = .a .so ;
 
+<<<<<<< HEAD
     library = [ GLOB $(lib)/lua52 $(lib)/lua5.2 $(lib)/lua $(lib) :
+=======
+    library = [ GLOB $(lib)/lua52 $(lib)/lua5.2 $(lib)/lua $(lib) /usr/lib/x86_64-linux-gnu/ :
+>>>>>>> 7592c5593c9f36763e6d37e49c9a7142e47b43fc
         $(names)$(extensions) ] ;
     lib-name = [ MATCH "lib(.*)" : $(library[1]:B) ] ;
 
