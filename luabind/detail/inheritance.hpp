@@ -354,7 +354,7 @@ struct pointer_type {
 template <typename T>
 struct pointer_type< std::auto_ptr<T> > {
     static const ComplexPointerTypes type_id = PT_AUTO_PTR;
-    static const class_id target_id = registered_class<T>::id;
+    static const class_id target_id;
     
     static CastRefContainer cast_to(const CastRefContainer& x) {
         abort(); // Really this should not work!
@@ -366,11 +366,12 @@ struct pointer_type< std::auto_ptr<T> > {
         return CastRefContainer();
     }
 };
+template <typename T> class_id pointer_type< std::auto_ptr<T> >::target_id = registered_class<T>::id;
 
 template <typename T>
 struct pointer_type< boost::shared_ptr<T> > {
     static const ComplexPointerTypes type_id = PT_BOOST_SHARED_PTR;
-    static const class_id target_id = registered_class<T>::id;
+    static const class_id target_id;
 
     static CastRefContainer cast_to(const CastRefContainer& x) {
         return CastRefContainer(boost::static_pointer_cast<T>(**static_cast<boost::shared_ptr<void>**>(x.get())), true);
@@ -380,6 +381,7 @@ struct pointer_type< boost::shared_ptr<T> > {
         return CastRefContainer(boost::static_pointer_cast<void>(**static_cast<boost::shared_ptr<T>**>(x.get())), true);
     }
 };
+template <typename T> class_id pointer_type< boost::shared_ptr<T> >::target_id = registered_class<T>::id;
 
 struct PointerDescriptor {
     typedef CastRefContainer(*CastFunc)(const CastRefContainer& x);
