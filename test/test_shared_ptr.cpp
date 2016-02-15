@@ -54,7 +54,7 @@ void test_object_exists_after_state_destruction() {
   
   lua_close(lua);
   
-  assert(createdVar);
+  TEST_CHECK(createdVar);
   
   createdVar->canDestroy = true;
   createdVar.reset();
@@ -62,26 +62,39 @@ void test_object_exists_after_state_destruction() {
   etVar->canDestroy = true;
   etVar.reset();
   
-  assert(ExistenceTester::number_of_initialized_objects == 0);
+  TEST_CHECK(ExistenceTester::number_of_initialized_objects == 0);
 }
 
+
+std::vector<void*> created_pointers;
+bool in_created_pointers(void* p) {
+  for (std::vector<void*>::iterator it = created_pointers.begin(); it != created_pointers.end(); it++) {
+    if (p == *it) {
+      return true;
+    }
+  }
+  return false;
+}
 
 struct X : public luabind::wrap_base
 {
     X(int value)
-      : value(value)
-    {}
+      : value(value) {
+      created_pointers.push_back(this);
+    }
 
     int value;
 };
 
 int get_value(boost::shared_ptr<X> p)
 {
+    TEST_CHECK(in_created_pointers(p.get()));
     return p->value;
 }
 
 boost::shared_ptr<X> filter(boost::shared_ptr<X> p)
 {
+    TEST_CHECK(in_created_pointers(p.get()));
     return p;
 }
 

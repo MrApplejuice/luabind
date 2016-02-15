@@ -94,9 +94,6 @@ public:
     };
     
     CastRefContainer() : pointerManager(NULL) {}
-    CastRefContainer(CastRefContainer& other) : pointerManager(NULL) {
-        *this = other;
-    }
     CastRefContainer(const CastRefContainer& other) : pointerManager(NULL) {
         *this = other;
     }
