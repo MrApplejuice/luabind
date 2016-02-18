@@ -363,7 +363,7 @@ struct pointer_type< std::auto_ptr<T> > {
         return CastRefContainer();
     }
 };
-template <typename T> class_id pointer_type< std::auto_ptr<T> >::target_id = registered_class<T>::id;
+template <typename T> const class_id pointer_type< std::auto_ptr<T> >::target_id = registered_class<T>::id;
 
 template <typename T>
 struct pointer_type< boost::shared_ptr<T> > {
@@ -378,7 +378,7 @@ struct pointer_type< boost::shared_ptr<T> > {
         return CastRefContainer(boost::static_pointer_cast<void>(**static_cast<boost::shared_ptr<T>**>(x.get())), true);
     }
 };
-template <typename T> class_id pointer_type< boost::shared_ptr<T> >::target_id = registered_class<T>::id;
+template <typename T> const class_id pointer_type< boost::shared_ptr<T> >::target_id = registered_class<T>::id;
 
 struct PointerDescriptor {
     typedef CastRefContainer(*CastFunc)(const CastRefContainer& x);
